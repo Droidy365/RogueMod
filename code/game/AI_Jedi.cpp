@@ -630,6 +630,7 @@ void Jedi_CheckCloak( void )
 		}
 	}
 }
+
 /*
 ==========================================================================================
 AGGRESSION
@@ -1304,7 +1305,14 @@ void Kyle_GrabEnemy( void )
 
 void Kyle_TryGrab( void )
 {
-	NPC_SetAnim( NPC, SETANIM_BOTH, BOTH_KYLE_GRAB, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+	if (NPC->client->ps.saber[0].type == SABER_STAFF)
+	{
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_A7_GRAB, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);	//Staff melee grab animation, added by Rogue mod
+	}
+	else
+	{
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_KYLE_GRAB, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+	}
 	NPC->client->ps.torsoAnimTimer += 200;
 	NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
 	NPC->client->ps.saberMove = NPC->client->ps.saberMoveNext = LS_READY;
@@ -1316,10 +1324,12 @@ void Kyle_TryGrab( void )
 	NPC->client->ps.SaberDeactivate();
 }
 
+
+
 qboolean Kyle_CanDoGrab( void )
 {
-	if ( NPC->client->NPC_class == CLASS_KYLE && (NPC->spawnflags&1) )
-	{//Boss Kyle
+	if (NPC->client->ps.stats[STAT_WEAPONS] & (1 << WP_MELEE)) 
+	{	//Originally required Boss Kyle flags, changed by Rogue mod
 		if ( NPC->enemy && NPC->enemy->client )
 		{//have a valid enemy
 			if ( TIMER_Done( NPC, "grabEnemyDebounce" ) )
@@ -1329,7 +1339,7 @@ qboolean Kyle_CanDoGrab( void )
 				{//me and enemy are on ground
 					if ( !PM_InOnGroundAnim( &NPC->enemy->client->ps ) )
 					{
-						if ( (NPC->client->ps.weaponTime <= 200||NPC->client->ps.torsoAnim==BOTH_KYLE_GRAB)
+						if ( (NPC->client->ps.weaponTime <= 200||NPC->client->ps.torsoAnim==BOTH_KYLE_GRAB || NPC->client->ps.torsoAnim == BOTH_A7_GRAB)	//Staff animation added by Rogue mod
 							&& !NPC->client->ps.saberInFlight )
 						{
 							if ( fabs(NPC->enemy->currentOrigin[2]-NPC->currentOrigin[2])<=8.0f )
@@ -1418,7 +1428,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 	{//don't move at all
 		//FIXME: sabers need trails
 	}
-	else if ( NPC->client->ps.torsoAnim == BOTH_KYLE_GRAB )
+	else if ( NPC->client->ps.torsoAnim == BOTH_KYLE_GRAB || NPC->client->ps.torsoAnim == BOTH_A7_GRAB)		//Staff animation added by Rogue mod
 	{//see if we grabbed enemy
 		if ( NPC->client->ps.torsoAnimTimer <= 200 )
 		{
@@ -1430,8 +1440,18 @@ static void Jedi_CombatDistance( int enemy_dist )
 			}
 			else
 			{
-				NPC_SetAnim( NPC, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+				if (NPC->client->ps.saber[0].type == SABER_STAFF)
+				{
+					NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_A7_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);	//Staff animation added by Rogue mod
+					NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+					return;
+				}
+				else
+				{
+					NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+					NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+					return;
+				}
 				return;
 			}
 		}
@@ -2079,6 +2099,24 @@ static void Jedi_FaceEntity( gentity_t *self, gentity_t *other, qboolean doPitch
 }
 */
 
+// Function to check if an NPC belongs to a Jedi/Sith/Boba Fett class, added by Rogue mod, used to be isJedi
+qboolean Jedi_CheckJediSkills(gentity_t* self) {
+	if (!self || !self->client) {
+		return qfalse; // Safety check
+	}
+
+	class_t npc_class = self->client->NPC_class;
+
+	if (npc_class == CLASS_JEDI || npc_class == CLASS_KYLE || npc_class == CLASS_LUKE ||
+		npc_class == CLASS_PLAYER || npc_class == CLASS_SHADOWTROOPER || npc_class == CLASS_REBORN ||
+		npc_class == CLASS_ALORA || npc_class == CLASS_TAVION || npc_class == CLASS_DESANN ||
+		npc_class == CLASS_BOBAFETT) {
+		return qtrue; // NPC belongs to a Jedi/Sith/Boba Fett class
+	}
+
+	return qfalse; // NPC does not belong to a Jedi/Sith/Boba Fett class
+}
+
 /*
 qboolean Jedi_DodgeEvasion( gentity_t *self, gentity_t *shooter, trace_t *tr, int hitLoc )
 
@@ -2089,11 +2127,16 @@ Right now used to dodge instant-hit weapons.
 FIXME: possibly call this for saber melee evasion and/or missile evasion?
 FIXME: possibly let player do this too?
 */
-qboolean Jedi_DodgeEvasion( gentity_t *self, gentity_t *shooter, trace_t *tr, int hitLoc )
+qboolean Jedi_DodgeEvasion(gentity_t* self, gentity_t* shooter, trace_t* tr, int hitLoc)
 {
 	int	dodgeAnim = -1;
 
-	if ( !self || !self->client || self->health <= 0 )
+	if (!self || !self->client || self->health <= 0)
+	{
+		return qfalse;
+	}
+
+	if (!Jedi_CheckJediSkills(self))	//Added by Rogue mod, non-Jedi characters with sabers shouldn't be in the Matrix
 	{
 		return qfalse;
 	}
@@ -2325,6 +2368,10 @@ evasionType_t Jedi_CheckFlipEvasions( gentity_t *self, float rightdot, float zdi
 		if ( self->client->ps.forceRageRecoveryTime > level.time
 			|| (self->client->ps.forcePowersActive&(1<<FP_RAGE)) )
 		{//no fancy dodges when raging
+			return EVASION_NONE;
+		}
+		if (!Jedi_CheckJediSkills(self))
+		{//non-Jedi can't flip, added by Rogue mod
 			return EVASION_NONE;
 		}
 	}
@@ -2654,7 +2701,7 @@ int Jedi_ReCalcParryTime( gentity_t *self, evasionType_t evasionType )
 	}
 	else if ( self->NPC )
 	{
-		/*
+		/*		//Don't bother with this for Rogue mod, it doesn't work
 		if ( !g_saberRealisticCombat->integer
 			&& ( g_spskill->integer == 2 || (g_spskill->integer == 1 && (self->client->NPC_class == CLASS_TAVION||self->client->NPC_class == CLASS_ALORA) ) ) )
 		{
@@ -2884,7 +2931,7 @@ qboolean Jedi_InNoAIAnim( gentity_t *self )
 	case BOTH_PULL_IMPALE_SWING:
 	case BOTH_A6_FB:
 	case BOTH_A6_LR:
-	case BOTH_A7_HILT:
+	case BOTH_A7_GRAB:
 		return qtrue;
 		break;
 	}
@@ -5438,7 +5485,7 @@ static void Jedi_CheckEnemyMovement( float enemy_dist )
 			VectorClear( NPC->client->ps.moveDir );
 			Jedi_Advance();
 		}
-		else if ( NPC->enemy->client->ps.torsoAnim == BOTH_A7_HILT
+		else if ( NPC->enemy->client->ps.torsoAnim == BOTH_A7_GRAB
 				&& NPC->client->ps.groundEntityNum != ENTITYNUM_NONE )
 		{//run into the hilt bash
 			//FIXME : only if in front!
@@ -6592,7 +6639,7 @@ static void Jedi_Attack( void )
 			Jedi_FaceEnemy( qtrue );
 		}
 		NPC_UpdateAngles( qtrue, qtrue );
-		if ( NPC->client->ps.torsoAnim == BOTH_KYLE_GRAB )
+		if ( NPC->client->ps.torsoAnim == BOTH_KYLE_GRAB || NPC->client->ps.torsoAnim == BOTH_A7_GRAB)	//Staff added by Rogue mod
 		{//see if we grabbed enemy
 			if ( NPC->client->ps.torsoAnimTimer <= 200 )
 			{
@@ -6604,8 +6651,18 @@ static void Jedi_Attack( void )
 				}
 				else
 				{
-					NPC_SetAnim( NPC, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-					NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+					if (NPC->client->ps.saber[0].type == SABER_STAFF)
+					{
+						NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_A7_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);	//Staff animation added by Rogue mod
+						NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+						return;
+					}
+					else
+					{
+						NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+						NPC->client->ps.weaponTime = NPC->client->ps.torsoAnimTimer;
+						return;
+					}
 					return;
 				}
 			}

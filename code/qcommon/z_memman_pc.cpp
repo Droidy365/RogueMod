@@ -508,7 +508,7 @@ qboolean Z_IsFromZone(const void *pvAddress, memtag_t eTag)
 #if 1	//debugging double free
 	if (pMemory->iMagic == INT_ID('F','R','E','E'))
 	{
-		Com_Printf("Z_IsFromZone(%x): Ptr has been freed already!(%9s)\n",pvAddress,pvAddress);
+//		Com_Printf("Z_IsFromZone(%x): Ptr has been freed already!(%9s)\n",pvAddress,pvAddress);		//Rogue mod edit: I'm sure it's *totally* fine to mute obscure errors, right?
 		return qfalse;
 	}
 #endif

@@ -35,6 +35,11 @@ typedef struct {
 void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 
+// Jawa Gun (Clone Rifle)
+void FX_JawaProjectileThink(centity_t* cent, const struct weaponInfo_s* weapon);
+void FX_JawaAltProjectileThink(centity_t* cent, const struct weaponInfo_s* weapon);
+
+
 // Blaster
 void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon );
@@ -84,6 +89,8 @@ void FX_NoghriShotProjectileThink( centity_t *cent, const struct weaponInfo_s *w
 func_t	funcs[] = {
 	{"bryar_func",			FX_BryarProjectileThink},
 	{"bryar_alt_func",		FX_BryarAltProjectileThink},
+	{"jawa_func",			FX_JawaProjectileThink},
+	{"jawa_alt_func",		FX_JawaAltProjectileThink},
 	{"blaster_func",		FX_BlasterProjectileThink},
 	{"blaster_alt_func",	FX_BlasterAltFireThink},
 	{"bowcaster_func",		FX_BowcasterProjectileThink},

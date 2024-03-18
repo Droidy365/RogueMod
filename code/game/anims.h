@@ -1474,6 +1474,8 @@ typedef enum //# animNumber_e
 	BOTH_A6_FB,				//# dual attack front/back
 	BOTH_A6_LR,				//# dual attack left/right
 	BOTH_A7_HILT,			//# saber knock (alt + stand still)
+	BOTH_A7_GRAB,			//# Kyle grab if using staff saber, added by Rogue mod
+	BOTH_A7_MISS,			//# Kyle miss if using staff saber, added by Rogue mod
 	//Alora
 	BOTH_ALORA_SPIN,		//#jump spin attack	death ballet
 	BOTH_ALORA_FLIP_1,		//# gymnast move 1

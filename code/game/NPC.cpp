@@ -335,6 +335,7 @@ int BodyRemovalPadTime( gentity_t *ent )
 	case CLASS_REMOTE:
 	case CLASS_SENTRY:
 	case CLASS_INTERROGATOR:
+	case CLASS_SHADOWTROOPER:	//Added for Rogue mod
 		time = 0;
 		break;
 	default:
@@ -389,6 +390,7 @@ static void NPC_RemoveBodyEffect(void)
 	case CLASS_MARK2:
 	case CLASS_INTERROGATOR:
 	case CLASS_ATST: // yeah, this is a little weird, but for now I'm listing all droids
+	case CLASS_SHADOWTROOPER:	//Added for Rogue mod
 	//	VectorCopy( NPC->currentOrigin, org );
 	//	org[2] -= 16;
 	//	tent = G_TempEntity( org, EV_BOT_EXPLODE );
@@ -866,10 +868,15 @@ static void DeadThink ( void )
 				// check for droids
 				if ( npc_class == CLASS_SEEKER || npc_class == CLASS_REMOTE || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE ||
 					 npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
-					 npc_class == CLASS_MARK2 || npc_class == CLASS_SENTRY )//npc_class == CLASS_PROTOCOL ||
+					 npc_class == CLASS_MARK2 || npc_class == CLASS_SENTRY )//npc_class == CLASS_PROTOCOL
 				{
 					NPC->client->ps.eFlags |= EF_NODRAW;
 					NPCInfo->timeOfDeath = level.time + FRAMETIME * 8;
+				}
+				else if ( npc_class == CLASS_SHADOWTROOPER ) //Shadowtrooper added for Rogue mod
+				{
+					NPC->client->ps.eFlags |= EF_NODRAW;
+					NPCInfo->timeOfDeath = level.time + FRAMETIME * 10;
 				}
 				else
 				{

@@ -26,10 +26,14 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #include "../cgame/cg_local.h"
 #include "Q3_Interface.h"
 #include "b_local.h"
+#include "g_local.h"
 #include "anims.h"
 #include "g_functions.h"
 #include "wp_saber.h"
 #include "g_vehicles.h"
+#include "../qcommon/q_shared.h"
+#include "../client/snd_music.h"
+#include "../client/client.h"
 
 extern qboolean G_CheckInSolid (gentity_t *self, qboolean fix);
 extern void ClientUserinfoChanged( int clientNum );
@@ -240,15 +244,15 @@ void G_ClassSetDontFlee( gentity_t *self )
 extern void	Vehicle_Register(gentity_t *ent);
 extern void RT_FlyStart( gentity_t *self );
 extern void SandCreature_ClearTimers( gentity_t *ent );
-void NPC_SetMiscDefaultData( gentity_t *ent )
+void NPC_SetMiscDefaultData(gentity_t* ent)
 {
-	if ( ent->spawnflags & SFB_CINEMATIC )
+	if (ent->spawnflags & SFB_CINEMATIC)
 	{//if a cinematic guy, default us to wait bState
 		ent->NPC->behaviorState = BS_CINEMATIC;
 	}
-	if ( ent->client->NPC_class == CLASS_RANCOR )
+	if (ent->client->NPC_class == CLASS_RANCOR)
 	{
-		if ( Q_stricmp( "mutant_rancor", ent->NPC_type ) == 0 )
+		if (Q_stricmp("mutant_rancor", ent->NPC_type) == 0)
 		{
 			ent->spawnflags |= 1;//just so I know it's a mutant rancor as opposed to a normal one
 			ent->NPC->aiFlags |= NPCAI_NAV_THROUGH_BREAKABLES;
@@ -261,37 +265,38 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 		}
 		ent->flags |= FL_NO_KNOCKBACK;
 	}
-	else if ( ent->client->NPC_class == CLASS_SAND_CREATURE )
+	else if (ent->client->NPC_class == CLASS_SAND_CREATURE)
 	{//???
-		ent->clipmask = CONTENTS_SOLID|CONTENTS_MONSTERCLIP;//it can go through others
+		ent->clipmask = CONTENTS_SOLID | CONTENTS_MONSTERCLIP;//it can go through others 
 		ent->contents = 0;//can't be hit?
 		ent->takedamage = qfalse;//can't be killed
 		ent->flags |= FL_NO_KNOCKBACK;
-		SandCreature_ClearTimers( ent );
+		SandCreature_ClearTimers(ent);
 	}
-	else if ( ent->client->NPC_class == CLASS_BOBAFETT )
+	else if (ent->client->NPC_class == CLASS_BOBAFETT)
 	{//set some stuff, precache
-		ent->client->ps.forcePowersKnown |= ( 1 << FP_LEVITATION );
-		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
-		ent->client->ps.forcePower	= 100;
-		ent->NPC->scriptFlags		|= (SCF_NAV_CAN_FLY|SCF_FLY_WITH_JET|SCF_NAV_CAN_JUMP);
-		NPC->flags					|= FL_UNDYING;		// Can't Kill Boba
-	}
-	else if ( ent->client->NPC_class == CLASS_ROCKETTROOPER )
-	{//set some stuff, precache
-		ent->client->ps.forcePowersKnown |= ( 1 << FP_LEVITATION );
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
 		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
 		ent->client->ps.forcePower = 100;
-		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY|SCF_FLY_WITH_JET|SCF_NAV_CAN_JUMP);//no groups, no combat points!
-		if ( Q_stricmp( "rockettrooper2Officer", ent->NPC_type ) == 0 )
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);
+		ent->flags |= (FL_SHIELDED);	//Added by Rogue mod, makes blasters bounce off of him like in the Mandalorian. Might change this.
+		//		NPC->flags					|= FL_UNDYING;		// Can't Kill Boba...		//UNTIL NOW! MWAHAHAHAHA! Changed for Rogue mod.
+	}
+	else if (ent->client->NPC_class == CLASS_ROCKETTROOPER)
+	{//set some stuff, precache
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
+		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
+		ent->client->ps.forcePower = 100;
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);//no groups, no combat points!
+		if (Q_stricmp("rockettrooper2Officer", ent->NPC_type) == 0)
 		{//start in the air, use spotlight
 			//ent->NPC->scriptFlags |= SCF_NO_GROUPS;
 			ent->NPC->scriptFlags &= ~SCF_FLY_WITH_JET;
-			RT_FlyStart( ent );
-			NPC_SetMoveGoal( ent, ent->currentOrigin, 16, qfalse, -1, NULL );
-			VectorCopy( ent->currentOrigin, ent->pos1 );
+			RT_FlyStart(ent);
+			NPC_SetMoveGoal(ent, ent->currentOrigin, 16, qfalse, -1, NULL);
+			VectorCopy(ent->currentOrigin, ent->pos1);
 		}
-		if ( (ent->spawnflags&2) )
+		if ((ent->spawnflags & 2))
 		{//spotlight
 			ent->client->ps.eFlags |= EF_SPOTLIGHT;
 		}
@@ -300,76 +305,140 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 	{
 		ent->flags |= FL_NO_KNOCKBACK;
 	}
-	else if ( ent->client->NPC_class == CLASS_SABOTEUR )
+	else if (ent->client->NPC_class == CLASS_SABOTEUR)
 	{//can cloak
 		ent->NPC->aiFlags |= NPCAI_SHIELDS;//give them the ability to cloak
-		if ( (ent->spawnflags&16) )
+		if ((ent->spawnflags & 16))
 		{//start cloaked
-			Saboteur_Cloak( ent );
+			Saboteur_Cloak(ent);
 		}
 	}
-	else if ( ent->client->NPC_class == CLASS_ASSASSIN_DROID )
+	else if (ent->client->NPC_class == CLASS_ASSASSIN_DROID)
 	{
 		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
-		if (ent->s.weapon==WP_BLASTER)
+		if (ent->s.weapon == WP_BLASTER)
 		{
 			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
 		}
 		ent->flags |= (FL_NO_KNOCKBACK);
 	}
+	else if (ent->client->NPC_class == CLASS_JAN)	//Added by Rogue mod, allows CLASS_JAN to use altFire on any weapon
+	{
+			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+	}
 
-	if (ent->spawnflags&4096)
+
+	if (ent->spawnflags & 4096)
 	{
 		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
 	}
 
-	if ( Q_stricmp( "DKothos", ent->NPC_type ) == 0
-		|| Q_stricmp( "VKothos", ent->NPC_type ) == 0 )
+	if (Q_stricmp("DKothos", ent->NPC_type) == 0
+		|| Q_stricmp("VKothos", ent->NPC_type) == 0)
 	{
 		ent->NPC->scriptFlags |= SCF_DONT_FIRE;
 		ent->NPC->aiFlags |= NPCAI_HEAL_ROSH;
 		ent->count = 100;
 	}
-	else if ( Q_stricmp( "rosh_dark", ent->NPC_type ) == 0 )
+	else if (Q_stricmp("rosh_dark", ent->NPC_type) == 0)
 	{
 		ent->NPC->aiFlags |= NPCAI_ROSH;
 	}
 
-	if ( Q_stricmpn( ent->NPC_type, "hazardtrooper", 13 ) == 0 )
+	if (Q_stricmpn(ent->NPC_type, "hazardtrooper", 13) == 0)
 	{//hazard trooper
 		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
-		ent->flags |= (FL_SHIELDED|FL_NO_KNOCKBACK);//low-level shots bounce off, no knockback
+		ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);//low-level shots bounce off, no knockback
 	}
-	if ( !Q_stricmp( "Yoda", ent->NPC_type ) )
+	if (!Q_stricmp("Yoda", ent->NPC_type))
 	{//FIXME: extern this into NPC.cfg?
 		ent->NPC->scriptFlags |= SCF_NO_FORCE;//force powers don't work on him
 		ent->NPC->aiFlags |= NPCAI_BOSS_CHARACTER;
 	}
-	if ( !Q_stricmp( "emperor", ent->NPC_type )
-		|| !Q_stricmp( "cultist_grip", ent->NPC_type )
-		|| !Q_stricmp( "cultist_drain", ent->NPC_type )
-		|| !Q_stricmp( "cultist_lightning", ent->NPC_type ))
+	if (!Q_stricmp("emperor", ent->NPC_type)
+		|| !Q_stricmp("cultist_grip", ent->NPC_type)
+		|| !Q_stricmp("cultist_drain", ent->NPC_type)
+		|| !Q_stricmp("cultist_lightning", ent->NPC_type))
 	{//FIXME: extern this into NPC.cfg?
 		ent->NPC->scriptFlags |= SCF_DONT_FIRE;//so he uses only force powers
 	}
-	if (!Q_stricmp( "Rax", ent->NPC_type ) )
+	if (!Q_stricmp("Rax", ent->NPC_type))
 	{
 		ent->NPC->scriptFlags |= SCF_DONT_FLEE;
 	}
-	if ( !Q_stricmp( "cultist_destroyer", ent->NPC_type ) )
+	if (!Q_stricmp("cultist_destroyer", ent->NPC_type))
 	{
 		ent->splashDamage = 1000;
 		ent->splashRadius = 384;
 		//FIXME: precache these!
-		ent->fxID = G_EffectIndex( "force/destruction_exp" );
-		ent->NPC->scriptFlags |= (SCF_DONT_FLEE|SCF_IGNORE_ALERTS);
+		ent->fxID = G_EffectIndex("force/destruction_exp");
+		ent->NPC->scriptFlags |= (SCF_DONT_FLEE | SCF_IGNORE_ALERTS);
 		ent->NPC->ignorePain = qtrue;
 	}
-	if ( Q_stricmp( "chewie", ent->NPC_type ) )
+	if (!Q_stricmp("chewie", ent->NPC_type))	//fixed by Rogue mod
 	{
 		//in case chewie ever loses his gun...
 		ent->NPC->aiFlags |= NPCAI_HEAVY_MELEE;
 	}
+
+//Define mapname
+//	char mapname[MAX_QPATH];
+
+	// Rogue mod code that sets the Shadowtrooper_Ghost's force powers and sabers to be the same as the player's
+
+	if (!Q_stricmp("shadowtrooper_ghost", ent->NPC_type))
+	{
+		ent->NPC->aiFlags |= NPCAI_SUBBOSS_CHARACTER;
+		ent->flags | FL_NO_KNOCKBACK | FL_NOTARGET;
+		for (int i = 0; i < NUM_FORCE_POWERS; i++) {
+			ent->client->ps.forcePowersKnown |= (1 << i); // Grant all Force powers
+			ent->client->ps.forcePowerLevel[i] = player->client->ps.forcePowerLevel[i]; // Match levels with player
+		}
+
+		if (ent->NPC && player->client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+		{
+			ent->client->ps.saber[0] = player->client->ps.saber[0]; // Copy saber model
+
+			//		Set Ghost to use Dual sabers if the player is
+			if (player->client->ps.dualSabers)
+			{
+				ent->client->ps.saber[1] = player->client->ps.saber[1]; // Copy second saber model	
+				ent->client->ps.dualSabers = qtrue;
+				ent->client->ps.saberAnimLevel = SS_DUAL;
+			}
+			else if (player->client->ps.saber[0].type == SABER_STAFF)
+			{
+				ent->client->ps.saberAnimLevel = SS_STAFF;
+			}
+			else
+			{
+				ent->client->ps.saberAnimLevel = player->client->ps.saberAnimLevel;
+			}
+		}
+	}
+// Set music tracks
+//		if (ent->NPC->stats.health > 0)
+//		{
+//			cgi_S_StartBackgroundTrack("shadow_fight", NULL, qfalse);
+//		}
+//		else if (ent->health < 0)
+//		{
+//			cgi_S_StartBackgroundTrack("t1_fatal", NULL, qfalse); //set to mapname
+//		}
+//
+//	}
+
+	//	Rogue mod code to make the Stormtrooper Commandos use Boba Fett's flamethrower
+	if (!Q_stricmpn(ent->NPC_type, "stcommando", 10))
+	{
+		ent->NPC->aiFlags |= NPCAI_FLAMETHROW;
+	}
+
+	//	Rogue mod code to make Purge Troopers do something
+//	if (!Q_stricmpn(ent->NPC_type, "purge", 5))
+//	{
+//	}
+
 	//==================
 	if ( ent->client->ps.saber[0].type != SABER_NONE
 		&& (!(ent->NPC->aiFlags&NPCAI_MATCHPLAYERWEAPON)||!ent->weaponModel[0]) )
@@ -475,7 +544,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 				if ( ent->NPC->rank >= RANK_LT || ent->client->ps.weapon == WP_THERMAL )
 				{//officers, grenade-throwers use alt-fire
 					//ent->health = 50;
-					//ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+					ent->NPC->scriptFlags |= SCF_ALT_FIRE; //used to be disabled
 				}
 				break;
 			}
@@ -520,12 +589,14 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 	case TEAM_ENEMY:
 		{
 			ent->NPC->defaultBehavior = BS_DEFAULT;
+ 
 			if ( ent->client->NPC_class == CLASS_SHADOWTROOPER
 				&& Q_stricmpn("shadowtrooper", ent->NPC_type, 13 ) == 0 )
 			{//FIXME: a spawnflag?
 				Jedi_Cloak( ent );
 			}
-		 	if( ent->client->NPC_class == CLASS_TAVION ||
+		 	if
+			( ent->client->NPC_class == CLASS_TAVION ||
 				ent->client->NPC_class == CLASS_ALORA ||
 				(ent->client->NPC_class == CLASS_REBORN && ent->client->ps.weapon == WP_SABER) ||
 				ent->client->NPC_class == CLASS_DESANN ||
@@ -560,9 +631,12 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 					break;
 				case WP_BLASTER_PISTOL:
 					NPCInfo->scriptFlags |= SCF_PILOT;
-					if ( ent->client->NPC_class == CLASS_REBORN
-						&& ent->NPC->rank >= RANK_LT_COMM
-						&& (!(ent->NPC->aiFlags&NPCAI_MATCHPLAYERWEAPON)||!ent->weaponModel[0]) )//they do this themselves
+// Original CultistCommando Dual Pistol requirement
+// 
+//					if ( ent->client->NPC_class == CLASS_REBORN
+//						&& ent->NPC->rank >= RANK_LT_COMM
+//						&& (!(ent->NPC->aiFlags&NPCAI_MATCHPLAYERWEAPON)||!ent->weaponModel[0]) )//they do this themselves
+					if (ent->NPC->rank >= RANK_LT_COMM)
 					{//dual blaster pistols, so add the left-hand one, too
 						G_CreateG2AttachedWeaponModel( ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handLBolt, 1 );
 					}
@@ -585,7 +659,8 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 					//shotgunner
 					if ( !Q_stricmp( "stofficeralt", ent->NPC_type ) )
 					{
-						//ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+//						ent->NPC->scriptFlags |= SCF_ALT_FIRE; //Originally disabled too? What is the point of this? This NPC has TWO copies!!
+//						Future Droidy here. As the wise philosopher, Todd Howard, once said - "Sometimes, it doesn't just work."
 					}
 					break;
 				case WP_ROCKET_LAUNCHER:
@@ -607,13 +682,17 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 					NPCInfo->scriptFlags |= SCF_PILOT;
 
 					ST_ClearTimers( ent );
-					if ( ent->NPC->rank >= RANK_COMMANDER )
+					if (ent->NPC->rank >= RANK_COMMANDER || ent->NPC->rank >= RANK_ENSIGN || ent->NPC->rank >= RANK_LT_COMM); // Additional ranks added by me
 					{//commanders use alt-fire
-						//ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+//						ent->NPC->scriptFlags |= SCF_ALT_FIRE; // Originally disabled... Then re-enabled, then re-disabled upon finding out it's broken.
 					}
-					if ( !Q_stricmp( "rodian2", ent->NPC_type ) )
+					if ( !Q_stricmp( "rodian2", ent->NPC_type))
 					{
-						//ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+//						ent->NPC->scriptFlags |= SCF_ALT_FIRE; // This too?
+					}
+					if (ent->client->ps.forcePowerLevel[FP_TELEPATHY] == FORCE_LEVEL_1 );
+					{
+//						ent->NPC->scriptFlags |= SCF_ALT_FIRE; // My custom code that I thought was big brain
 					}
 					break;
 				}
@@ -1509,7 +1588,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent, qboolean fullSpawnNow )
 
 	if ( ent->NPC_type == NULL )
 	{
-		ent->NPC_type = "random";
+		ent->NPC_type = "random";	
 		newent->NPC_type = "random";
 	}
 	else
@@ -2663,6 +2742,26 @@ void SP_NPC_Rebel( gentity_t *self)
 //ENEMIES
 //=============================================================================================
 
+//
+// Rogue mod code for Shadowtrooper_Ghost spawn function
+//
+
+qboolean TrySpawnGhostNPC(gentity_t* self) 
+{
+	if (strcmp(level.mapname, "yavin1b") == 0) {
+		return qfalse; // If the map is yavin1b, don't spawn the ghost
+	}
+
+	if (!level.ghostSpawned && Q_irand(0, 29) == 0)	// 1/30 chance of spawning on a random NPC used to be 1/20, used to have a 2 minute delay but was broken. && level.time > 120000
+	{
+		self->NPC_type = "shadowtrooper_ghost";
+		level.ghostSpawned = qtrue;
+		return qtrue;
+	}
+	return qfalse;
+}
+
+
 /*QUAKED NPC_Human_Merc(1 0 0) (-16 -16 -24) (16 16 40) BOWCASTER REPEATER FLECHETTE CONCUSSION DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
 100 health, blaster rifle
 
@@ -2681,36 +2780,30 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
-void SP_NPC_Human_Merc( gentity_t *self)
-{
-	if ( !self->NPC_type )
-	{
-		if ( self->message )
-		{
-			self->NPC_type = "human_merc_key";
+static const char* keyMercs[] = {
+	"human_merc_key",
+};
+static const size_t numKeyMercs = ARRAY_LEN(keyMercs);
+
+static const char* normalMercs[] = {
+	"human_merc_bow", "human_merc_rep", "human_merc_flc",
+	"human_merc_cnc", "human_merc", "human_merc", "human_merc",
+};
+static const size_t numNormalMercs = ARRAY_LEN(normalMercs);
+
+void SP_NPC_Human_Merc(gentity_t* self) {
+	if (!self->NPC_type && !TrySpawnGhostNPC(self)) {
+		if (self->message) {
+			// key merc spawns
+			self->NPC_type = (char*)keyMercs[Q_irand(0, numKeyMercs - 1)];
 		}
-		else if ( (self->spawnflags&1) )
-		{
-			self->NPC_type = "human_merc_bow";
-		}
-		else if ( (self->spawnflags&2) )
-		{
-			self->NPC_type = "human_merc_rep";
-		}
-		else if ( (self->spawnflags&4) )
-		{
-			self->NPC_type = "human_merc_flc";
-		}
-		else if ( (self->spawnflags&8) )
-		{
-			self->NPC_type = "human_merc_cnc";
-		}
-		else
-		{
-			self->NPC_type = "human_merc";
+		else {
+			// merc spawns
+			self->NPC_type = (char*)normalMercs[Q_irand(0, numNormalMercs - 1)];
 		}
 	}
-	SP_NPC_spawner( self );
+
+	SP_NPC_spawner(self);
 }
 
 //TROOPERS=============================================================================
@@ -2731,43 +2824,67 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
-void SP_NPC_Stormtrooper( gentity_t *self)
-{
-	if ( self->spawnflags & 8 )
-	{//rocketer
-		self->NPC_type = "rockettrooper";
-	}
-	else if ( self->spawnflags & 4 )
-	{//alt-officer
-		self->NPC_type = "stofficeralt";
-	}
-	else if ( self->spawnflags & 2 )
-	{//commander
-		self->NPC_type = "stcommander";
-	}
-	else if ( self->spawnflags & 1 )
-	{//officer
-		self->NPC_type = "stofficer";
-	}
-	else
-	{//regular trooper
-		if ( Q_irand( 0, 1 ) )
+
+//Random stormtrooper generation for Rogue mod
+
+#define FLAG_SPECIAL_SPAWN (1 << 2)
+
+static const char* yavinStormtroopers[] = {
+	"stormtrooper", "stormtrooper2", "stormtrooper", "stormtrooper2", "stcommander", "stbowcaster", "stsarge", "scouttrooper", "scoutpistol",
+};
+static const size_t numYavinStormtroopers = ARRAY_LEN(yavinStormtroopers);
+
+static const char* eliteStormtroopers[] = {
+	"stcommander", "stofficer",
+	"stcommando", "stcommando2", "rockettrooper", "rockettrooper2",
+	"hazardtrooper", "hazardtrooperconcussion", "stsarge", "stbowcaster", "stgrenade","stpoison",
+	"cultist_grip", "cultist_saber_all", "scoutsniper", "scoutcommando", "scoutknife", "scoutknife_dual",
+	"scoutbaton", "scoutstaff", "purgetrooper", "purgedual", "purgestaff",
+};
+static const size_t numEliteStormtroopers = ARRAY_LEN(eliteStormtroopers);
+
+static const char* normalStormtroopers[] = {
+	"stormtrooper",	"stormtrooper2", "stcommander",	"scouttrooper",	"scoutpistol",
+	"stcommander",	"stormtrooper",	"stormtrooper2", "stormtrooper", "stormtrooper2",
+	"stsarge", "stbowcaster","stgrenade", "stpoison",
+	"stsarge", "stbowcaster","stgrenade", "stpoison",
+	"scouttrooper", "scoutpistol", "scoutsniper", "scoutcommando",
+	"scoutknife", "hazardtrooper", "scoutpistol", "scoutbaton", "purgetrooper",
+};
+
+static const size_t numNormalStormtroopers = ARRAY_LEN(normalStormtroopers);
+
+void SP_NPC_Stormtrooper(gentity_t* self) {
+	if (!self->NPC_type && !TrySpawnGhostNPC(self)) 
+	{
+		if (strcmp(level.mapname, "yavin1b") == 0)	//Only spawn basic Stormtroopers on Yavin
 		{
-			self->NPC_type = "StormTrooper";
+			self->NPC_type = (char*)yavinStormtroopers[Q_irand(0, numYavinStormtroopers - 1)];
 		}
-		else
+		else if (self->spawnflags & FLAG_SPECIAL_SPAWN) 
 		{
-			self->NPC_type = "StormTrooper2";
+			// elite stormtrooper spawns
+			self->NPC_type = (char*)eliteStormtroopers[Q_irand(0, numEliteStormtroopers - 1)];
+		}
+		else if (Q_irand(0, 29) == 0) { // Generate a number between 0 and 29; if it's 0, spawn elite
+			self->NPC_type = (char*)eliteStormtroopers[Q_irand(0, numEliteStormtroopers - 1)];
+		}
+		else 
+		{
+			// Normal stormtrooper spawns
+			self->NPC_type = (char*)normalStormtroopers[Q_irand(0, numNormalStormtroopers - 1)];
 		}
 	}
 
-	SP_NPC_spawner( self );
+	SP_NPC_spawner(self);
 }
-void SP_NPC_StormtrooperOfficer( gentity_t *self)
+void SP_NPC_StormtrooperOfficer(gentity_t* self) 
 {
-	self->spawnflags |= 1;
-	SP_NPC_Stormtrooper( self );
+	self->spawnflags |= FLAG_SPECIAL_SPAWN;
+	SP_NPC_Stormtrooper(self);
 }
+
+
 /*QUAKED NPC_Snowtrooper(1 0 0) (-16 -16 -24) (16 16 40) x x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
 30 health, blaster
 
@@ -3108,25 +3225,18 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
-void SP_NPC_Imperial( gentity_t *self)
-{
-	if ( !self->NPC_type )
-	{
-		if ( self->spawnflags & 1 )
-		{
-			self->NPC_type = "ImpOfficer";
-		}
-		else if ( self->spawnflags & 2 )
-		{
-			self->NPC_type = "ImpCommander";
-		}
-		else
-		{
-			self->NPC_type = "Imperial";
-		}
+static const char* imperials[] = {
+	"ImpOfficer", "ImpCommander", "Imperial", "ImpOfficer", "ImpCommander", "Imperial", "ImpOfficer", "ImpCommander", "Imperial", "ImpAdmiral", "purgetrooperkey", "purgedualkey", "purgestaffkey"
+};
+static const size_t numImperials = ARRAY_LEN(imperials);
+
+void SP_NPC_Imperial(gentity_t* self) {
+	if (!self->NPC_type) {
+		// Imperial spawns
+		self->NPC_type = (char*)imperials[Q_irand(0, numImperials - 1)];
 	}
 
-	SP_NPC_spawner( self );
+	SP_NPC_spawner(self);
 }
 
 /*QUAKED NPC_ImpWorker(1 0 0) (-16 -16 -24) (16 16 40) x x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
@@ -3136,11 +3246,32 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
-void SP_NPC_ImpWorker( gentity_t *self)
-{
-	self->NPC_type = "ImpWorker";
+static const char* impworkerjets[] = {
+	"impworker_jet", "impworkerblaster_jet", "impworkerdemp2_jet", "impworkerofficer_jet",
+};
+static const size_t numImpworkerJets = ARRAY_LEN(impworkerjets);
 
-	SP_NPC_spawner( self );
+
+static const char* impworkers[] = {
+	"impworker", "impworkerblaster", "impworkerdemp2", "impworkerofficer", "impworker_jet", "impworkerblaster_jet", "impworkerdemp2_jet", "impworkerofficer_jet",
+};
+static const size_t numImpworkers = ARRAY_LEN(impworkers);
+
+
+void SP_NPC_ImpWorker(gentity_t* self) {
+	if (!self->NPC_type && !TrySpawnGhostNPC(self))
+	{
+		if (strcmp(level.mapname, "t2_wedge") == 0)
+		{
+			self->NPC_type = (char*)impworkerjets[Q_irand(0, numImpworkerJets - 1)];
+		}
+		else
+		{
+			self->NPC_type = (char*)impworkers[Q_irand(0, numImpworkers - 1)];
+		}
+	}
+
+	SP_NPC_spawner(self);
 }
 
 /*QUAKED NPC_BespinCop(1 0 0) (-16 -16 -24) (16 16 40) x x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
@@ -3564,29 +3695,56 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
-void SP_NPC_Saboteur( gentity_t *self)
-{
-	if ( !self->NPC_type )
-	{
-		if ( (self->spawnflags&1) )
-		{
-			self->NPC_type = "saboteursniper";
+
+
+static const char* sniperSaboteurs[] = {
+	"saboteursniper", "saboteursniper", "saboteursniper", "saboteursniper", "saboteurrocket",
+};
+static const size_t numSniperSaboteurs = ARRAY_LEN(sniperSaboteurs);
+
+static const char* normalSaboteurs[] = {
+	"saboteursniper", "saboteurpistol", "saboteurcommando",
+	"saboteur", "saboteurgrenade", "saboteurrocket", "saboteurdemp2",
+};
+static const size_t numNormalSaboteurs = ARRAY_LEN(normalSaboteurs);
+
+void SP_NPC_Saboteur(gentity_t* self) {
+	if (!self->NPC_type && !TrySpawnGhostNPC(self)) {
+		if (self->spawnflags & 1) {
+			// sniper saboteur spawns
+			self->NPC_type = (char*)sniperSaboteurs[Q_irand(0, numSniperSaboteurs - 1)];
 		}
-		else if ( (self->spawnflags&2) )
-		{
-			self->NPC_type = "saboteurpistol";
-		}
-		else if ( (self->spawnflags&4) )
-		{
-			self->NPC_type = "saboteurcommando";
-		}
-		else
-		{
-			self->NPC_type = "saboteur";
+		else {
+			// saboteur spawns
+			self->NPC_type = (char*)normalSaboteurs[Q_irand(0, numNormalSaboteurs - 1)];
 		}
 	}
-	SP_NPC_spawner( self );
+
+	SP_NPC_spawner(self);
 }
+
+/*
+void SP_NPC_Saboteur(gentity_t* self) {
+	// Attempt to spawn a Ghost NPC first
+	if (!TrySpawnGhostNPC(self)) {
+		// If not spawning a Ghost NPC and NPC_type is either unspecified or "saboteur_random"
+		if (!self->NPC_type || !Q_stricmp(self->NPC_type, "saboteur_random")) {
+			if (self->spawnflags & 1) {
+				// Sniper saboteur spawns
+				self->NPC_type = (char*)sniperSaboteurs[Q_irand(0, numSniperSaboteurs - 1)];
+			}
+			else {
+				// Normal saboteur spawns
+				self->NPC_type = (char*)normalSaboteurs[Q_irand(0, numNormalSaboteurs - 1)];
+			}
+		}
+	}
+
+	// Now, self->NPC_type is guaranteed to be valid; proceed to spawn the NPC
+	SP_NPC_spawner(self);
+}
+*/
+
 
 //=============================================================================================
 //MONSTERS
@@ -4169,6 +4327,61 @@ static void NPC_Spawn_f(void)
 		NPCspawner->spawnflags |= 4;
 		SP_NPC_Jedi( NPCspawner );
 	}
+	if (!Q_stricmp("stelite_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		NPCspawner->spawnflags |= FLAG_SPECIAL_SPAWN;
+		SP_NPC_Stormtrooper(NPCspawner);
+	}
+	if (!Q_stricmp("stormtrooper_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		SP_NPC_Stormtrooper(NPCspawner);
+	}
+	if (!Q_stricmp("imperial_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		SP_NPC_Imperial(NPCspawner);
+	}
+	if (!Q_stricmp("impworker_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		SP_NPC_ImpWorker(NPCspawner);
+	}
+
+	/*
+	if (!Q_stricmp("saboteur_random", NPCspawner->NPC_type))
+	{
+		// Determine the new NPC type based on your randomization logic
+		// This replaces the need for a separate function like DetermineRandomNPCType
+		const char* newNPCType;
+		if (NPCspawner->spawnflags & 1) {
+			// sniper saboteur spawns
+			newNPCType = sniperSaboteurs[Q_irand(0, numSniperSaboteurs - 1)];
+		}
+		else {
+			// Normal saboteur spawns
+			newNPCType = normalSaboteurs[Q_irand(0, numNormalSaboteurs - 1)];
+		}
+
+		// Now, directly apply the new NPC type to the spawner
+		NPCspawner->NPC_type = (char*)newNPCType;
+
+		// Proceed to spawn the NPC with the new type
+		SP_NPC_spawner(NPCspawner);
+	}
+	*/
+	if (!Q_stricmp("saboteur_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		SP_NPC_Saboteur(NPCspawner);
+	}
+	if (!Q_stricmp("human_merc_random", NPCspawner->NPC_type))
+	{//special case, for testing
+		NPCspawner->NPC_type = NULL;
+		SP_NPC_Human_Merc(NPCspawner);
+	}
+
 	else if ( isVehicle )
 	{
 		SP_NPC_Vehicle( NPCspawner );

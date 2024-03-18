@@ -270,6 +270,14 @@ public:
 	int				worldFlags;
 
 	int				dmState;		//actually, we do want save/load the dynamic music state
+
+// =====================================
+//
+// Code for the Rogue mod to keep track of whether or not the Shadowtrooper_Ghost NPC has spawned
+// 
+
+	qboolean ghostSpawned = qfalse;
+
 // =====================================
 //
 // NOTE!!!!!!   The only things beyond this point in the structure should be the ones you do NOT wish to be

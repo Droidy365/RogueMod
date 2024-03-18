@@ -293,6 +293,32 @@ saber_colors_t TranslateSaberColor( const char *name )
 	{
 		return SABER_PURPLE;
 	}
+	//New Rogue mod electrostaff colours
+//	if (!Q_stricmp(name, "red_elec"))
+//	{
+//		return ELECTRIC_RED;
+//	}
+//	if (!Q_stricmp(name, "orange_elec"))
+//	{
+//		return ELECTRIC_ORANGE;
+//	}
+	if (!Q_stricmp(name, "yellow_elec"))
+	{
+		return ELECTRIC_YELLOW;
+	}
+//	if (!Q_stricmp(name, "green_elec"))
+//	{
+//		return ELECTRIC_GREEN;
+//	}
+	if (!Q_stricmp(name, "blue_elec"))
+	{
+		return ELECTRIC_BLUE;
+	}
+	if (!Q_stricmp(name, "purple_elec"))
+	{
+		return ELECTRIC_PURPLE;
+	}
+//=============================================
 	if ( !Q_stricmp( name, "random" ) )
 	{
 		return ((saber_colors_t)(Q_irand( SABER_ORANGE, SABER_PURPLE )));

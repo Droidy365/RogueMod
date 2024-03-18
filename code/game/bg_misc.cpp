@@ -353,7 +353,7 @@ qboolean	BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps 
 			// Don't have this weapon yet, so pick it up.
 			return qtrue;
 		}
-		else if ( item->giTag == WP_SABER )
+		else if ( item->giTag == WP_SABER )	
 		{//always pick up a saber, might be a new one?
 			return qtrue;
 		}

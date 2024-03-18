@@ -68,7 +68,7 @@ void prox_mine_think( gentity_t *ent );
 void prox_mine_stick( gentity_t *self, gentity_t *other, trace_t *trace );
 void WP_FireFlechette( gentity_t *ent, qboolean alt_fire );
 void WP_Melee( gentity_t *ent );
-void WP_FireNoghriStick( gentity_t *ent );
+void WP_FireNoghriStick( gentity_t *ent, qboolean alt_fire);	//Edited by Rogue mod, added alt_fire function
 void WP_FireRepeater( gentity_t *ent, qboolean alt_fire );
 void rocketThink( gentity_t *ent );
 void WP_FireRocket( gentity_t *ent, qboolean alt_fire );

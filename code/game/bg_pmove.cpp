@@ -4420,7 +4420,15 @@ qboolean PM_RocketeersAvoidDangerousFalls( void )
 			TIMER_Set( pm->gent, "jetRecharge", 0 );
 			JET_FlyStart( pm->gent );
 		}
-		return qtrue;
+		if (pm->gent->client->NPC_class == CLASS_ROCKETTROOPER && (pm->gent->NPC->scriptFlags & SCF_NAV_CAN_JUMP))	//Added by Rogue mod, if jetpack has been disabled by lightning, fall to death
+		{
+			JET_FlyStop(pm->gent);
+			return qfalse;
+		}
+		else
+		{
+			return qtrue;
+		}
 	}
 	return qfalse;
 }
@@ -12423,7 +12431,7 @@ void PM_WeaponLightsaber(void)
 				PM_SetSaberMove( LS_A3_SPECIAL );
 				break;
 			case SS_DUAL:
-				PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );//PM_CheckDualSpinProtect();
+				PM_SetSaberMove(LS_DUAL_SPIN_PROTECT);//PM_CheckDualSpinProtect();
 				break;
 			case SS_STAFF:
 				PM_SetSaberMove( LS_STAFF_SOULCAL );
@@ -13658,7 +13666,6 @@ static void PM_Weapon( void )
 					PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK2,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLD);
 				}
 				break;
-
 			case WP_MELEE:
 
 				// since there's no RACE_BOTS, I listed all the droids that have might have melee attacks - dmv
@@ -13711,7 +13718,6 @@ static void PM_Weapon( void )
 					}
 				}
 				break;
-
 			case WP_TUSKEN_RIFLE:
 				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
 				{//shoot

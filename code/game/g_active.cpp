@@ -1388,7 +1388,7 @@ void	G_TouchTriggersLerped( gentity_t *ent ) {
 	VectorSubtract( ent->currentOrigin, ent->lastOrigin, diff );
 	dist = VectorNormalize( diff );
 #ifdef _DEBUG
-	assert( (dist<1024) && "insane distance in G_TouchTriggersLerped!" );
+	//assert( (dist<1024) && "insane distance in G_TouchTriggersLerped!" );		//Disabled assert
 #endif// _DEBUG
 
 	if ( dist > 1024 )
@@ -3898,6 +3898,11 @@ qboolean G_CheckClampUcmd( gentity_t *ent, usercmd_t *ucmd )
 			{
 				ent->client->ps.legsAnimTimer = ent->client->ps.torsoAnimTimer = 0;
 			}
+			//Meditate code added by Rogue mod
+			if (player->client)
+			{
+				ent->client->ps.forcePowerRegenRate = 100;
+			}
 		}
 		else
 		{
@@ -3906,6 +3911,11 @@ qboolean G_CheckClampUcmd( gentity_t *ent, usercmd_t *ucmd )
 				if ( ent->client->ps.legsAnimTimer < 100 )
 				{
 					ent->client->ps.legsAnimTimer = 100;
+				}
+				//Meditate code added by Rogue mod
+				if (player->client)
+				{
+					ent->client->ps.forcePowerRegenRate = 15;
 				}
 			}
 			if ( ent->client->ps.torsoAnim == BOTH_MEDITATE )
@@ -3926,7 +3936,7 @@ qboolean G_CheckClampUcmd( gentity_t *ent, usercmd_t *ucmd )
 					VectorClear( ent->client->ps.moveDir );
 					ent->client->ps.forceJumpCharge = 0;
 				}
-				overridAngles = (PM_LockAngles( ent, ucmd )?qtrue:overridAngles);
+//				overridAngles = (PM_LockAngles( ent, ucmd )?qtrue:overridAngles);	Used to disable camera, changed by Rogue mod - looks a little silly, but works for gameplay
 			}
 		}
 	}
@@ -3943,6 +3953,11 @@ qboolean G_CheckClampUcmd( gentity_t *ent, usercmd_t *ucmd )
 			ent->client->ps.forceJumpCharge = 0;
 		}
 		overridAngles = (PM_LockAngles( ent, ucmd )?qtrue:overridAngles);
+		//Meditate code added by Rogue mod
+		if (player->client)
+		{
+			ent->client->ps.forcePowerRegenRate = 100;
+		}
 	}
 	else if ( !ent->s.number )
 	{

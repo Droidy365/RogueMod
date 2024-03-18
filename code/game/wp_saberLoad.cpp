@@ -448,6 +448,10 @@ void WP_SaberSetDefaults( saberInfo_t *saber, qboolean setColors = qtrue )
 	saber->splashDamage = 0;				//0 - amount of splashDamage, 100% at a distance of 0, 0% at a distance = splashRadius
 	saber->splashKnockback = 0.0f;			//0 - amount of splashKnockback, 100% at a distance of 0, 0% at a distance = splashRadius
 
+	//Rogue mod code for electricity effect on sabers
+	saber->electric = 0;
+
+
 	//===SECONDARY BLADES===================
 	//done in cgame (client-side code)
 	saber->trailStyle2 = 0;					//0 - default (0) is normal, 1 is a motion blur and 2 is no trail at all (good for real-sword type mods)
@@ -490,7 +494,7 @@ static void Saber_ParseSaberType( saberInfo_t *saber, const char **p ) {
 	if ( COM_ParseString( p, &value ) )
 		return;
 	saberType = GetIDForString( SaberTable, value );
-	if ( saberType >= SABER_SINGLE && saberType < NUM_SABERS )
+	if ( saberType >= SABER_SINGLE && saberType <= NUM_SABERS )
 		saber->type = (saberType_t)saberType;
 }
 static void Saber_ParseSaberModel( saberInfo_t *saber, const char **p ) {
@@ -1457,6 +1461,16 @@ static void Saber_ParseSplashKnockback( saberInfo_t *saber, const char **p ) {
 	}
 	saber->splashKnockback = f;
 }
+
+static void Saber_ParseElectric(saberInfo_t* saber, const char** p) {
+	int n;
+	if (COM_ParseInt(p, &n)) {
+		SkipRestOfLine(p);
+		return;
+	}
+	saber->electric = n;
+}
+
 static void Saber_ParseHitSound1( saberInfo_t *saber, const char **p ) {
 	const char *value;
 	if ( COM_ParseString( p, &value ) )
@@ -1971,6 +1985,7 @@ static keywordHash_t saberParseKeywords[] = {
 	{ "bladeEffect2",			Saber_ParseBladeEffect2,		NULL	},
 	{ "noClashFlare",			Saber_ParseNoClashFlare,		NULL	},
 	{ "noClashFlare2",			Saber_ParseNoClashFlare2,		NULL	},
+	{ "electric",				Saber_ParseElectric,			NULL	},	//Electric effect added by Rogue mod
 	{ NULL,						NULL,							NULL	}
 };
 static keywordHash_t *saberParseKeywordHash[KEYWORDHASH_SIZE];

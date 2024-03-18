@@ -25,6 +25,7 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 #include "g_local.h"
 #include "b_local.h"
+#include "bg_local.h"
 #include "g_functions.h"
 #include "anims.h"
 #include "objectives.h"
@@ -39,6 +40,8 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 extern qboolean Rosh_TwinPresent( gentity_t *self );
 extern void G_CheckCharmed( gentity_t *self );
 extern qboolean Wampa_CheckDropVictim( gentity_t *self, qboolean excludeMe );
+
+extern void RT_Flying_Zapped(gentity_t* self);	//Added by Rogue mod
 
 extern	cvar_t	*g_debugDamage;
 extern qboolean	stop_icarus;
@@ -179,12 +182,15 @@ gentity_t *TossClientItems( gentity_t *self )
 			}
 		}
 	}
-	else if ( weapon == WP_BLASTER_PISTOL )
-	{//FIXME: either drop the pistol and make the pickup only give ammo or drop ammo
-	}
-	else if ( weapon == WP_STUN_BATON
-		|| weapon == WP_MELEE )
-	{//never drop these
+//	else if ( weapon == WP_BLASTER_PISTOL )
+//	{//FIXME: either drop the pistol and make the pickup only give ammo or drop ammo
+//	}
+//	else if ( weapon == WP_STUN_BATON
+//		|| weapon == WP_MELEE )
+//	{//never drop these
+//	}
+	else if ( weapon == WP_MELEE )
+	{//replacement code for Rogue mod to allow dropping blaster pistols, and I guess stun batons too.
 	}
 	else if ( weapon > WP_SABER && weapon <= MAX_PLAYER_WEAPONS )//&& self->client->ps.ammo[ weaponData[weapon].ammoIndex ]
 	{
@@ -257,6 +263,22 @@ gentity_t *TossClientItems( gentity_t *self )
 				case WP_STUN_BATON:
 					dropped->count = 20;
 					break;
+				
+				//New Rogue mod code for NPC weapons
+				case WP_TUSKEN_STAFF:		
+					dropped->count = 100;
+					break;
+				case WP_TUSKEN_RIFLE:		
+					dropped->count = 20;
+					break;
+				case WP_NOGHRI_STICK:		
+					dropped->count = 10;
+					break;
+				case WP_SABER:		
+					dropped->count = 100;
+					break;
+
+
 				default:
 					dropped->count = 0;
 					break;
@@ -724,6 +746,15 @@ void DeathFX( gentity_t *ent )
 		VectorCopy( ent->currentOrigin, effectPos );
 		G_PlayEffect( "env/med_explode", effectPos );
 		break;
+//		Poof effect for shadowtrooper_ghost in Rogue mod
+	case CLASS_SHADOWTROOPER:
+		if (!Q_stricmp("shadowtrooper_ghost", ent->NPC_type))
+		{
+			G_SoundOnEnt(ent, CHAN_AUTO, "sound/chars/shadowtrooper/poof.wav");
+			VectorCopy(ent->currentOrigin, effectPos);
+			G_PlayEffect("shadowtrooper/poof", effectPos);
+		}
+		break;
 
 	default:
 		break;
@@ -897,7 +928,9 @@ qboolean G_GetHitLocFromSurfName( gentity_t *ent, const char *surfName, int *hit
 			|| ent->client->NPC_class == CLASS_MOUSE
 			|| ent->client->NPC_class == CLASS_SENTRY
 			|| ent->client->NPC_class == CLASS_INTERROGATOR
+			|| ent->client->NPC_class == CLASS_SHADOWTROOPER	//Shadowtrooper added for Rogue mod
 			|| ent->client->NPC_class == CLASS_PROBE ) )
+
 	{//we don't care about per-surface hit-locations or dismemberment for these guys
 		return qfalse;
 	}
@@ -3880,48 +3913,51 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		}
 		else
 		{
-			if ( g_saberPickuppableDroppedSabers->integer )
-			{//always drop your sabers
-				TossClientItems( self );
-				self->client->ps.weapon = self->s.weapon = WP_NONE;
-			}
-			else if ( (
-					(hitLoc != HL_HAND_RT&&hitLoc !=HL_CHEST_RT&&hitLoc!=HL_ARM_RT&&hitLoc!=HL_BACK_LT)
+			if (self->client->NPC_class != CLASS_SHADOWTROOPER) //Added by Rogue mod, ghosts don't drop sabers
+			{
+				if (g_saberPickuppableDroppedSabers->integer)
+				{//always drop your sabers
+					TossClientItems(self);
+					self->client->ps.weapon = self->s.weapon = WP_NONE;
+				}
+				else if ((
+					(hitLoc != HL_HAND_RT && hitLoc != HL_CHEST_RT && hitLoc != HL_ARM_RT && hitLoc != HL_BACK_LT)
 					|| self->client->dismembered
 					|| meansOfDeath != MOD_SABER
-				  )//if might get hand cut off, leave saber in hand
-				&& holdingSaber
-				&& ( Q_irand( 0, 1 )
-					|| meansOfDeath == MOD_EXPLOSIVE
-					|| meansOfDeath == MOD_REPEATER_ALT
-					|| meansOfDeath == MOD_FLECHETTE_ALT
-					|| meansOfDeath == MOD_ROCKET
-					|| meansOfDeath == MOD_ROCKET_ALT
-					|| meansOfDeath == MOD_CONC
-					|| meansOfDeath == MOD_CONC_ALT
-					|| meansOfDeath == MOD_THERMAL
-					|| meansOfDeath == MOD_THERMAL_ALT
-					|| meansOfDeath == MOD_DETPACK
-					|| meansOfDeath == MOD_LASERTRIP
-					|| meansOfDeath == MOD_LASERTRIP_ALT
-					|| meansOfDeath == MOD_MELEE
-					|| meansOfDeath == MOD_FORCE_GRIP
-					|| meansOfDeath == MOD_KNOCKOUT
-					|| meansOfDeath == MOD_CRUSH
-					|| meansOfDeath == MOD_IMPACT
-					|| meansOfDeath == MOD_FALLING
-					|| meansOfDeath == MOD_EXPLOSIVE_SPLASH ) )
-			{//drop it
-				TossClientItems( self );
-				self->client->ps.weapon = self->s.weapon = WP_NONE;
-			}
-			else
-			{//just free it
-				if ( g_entities[self->client->ps.saberEntityNum].inuse )
-				{
-					G_FreeEntity( &g_entities[self->client->ps.saberEntityNum] );
+					)//if might get hand cut off, leave saber in hand
+					&& holdingSaber
+					&& (Q_irand(0, 1)
+						|| meansOfDeath == MOD_EXPLOSIVE
+						|| meansOfDeath == MOD_REPEATER_ALT
+						|| meansOfDeath == MOD_FLECHETTE_ALT
+						|| meansOfDeath == MOD_ROCKET
+						|| meansOfDeath == MOD_ROCKET_ALT
+						|| meansOfDeath == MOD_CONC
+						|| meansOfDeath == MOD_CONC_ALT
+						|| meansOfDeath == MOD_THERMAL
+						|| meansOfDeath == MOD_THERMAL_ALT
+						|| meansOfDeath == MOD_DETPACK
+						|| meansOfDeath == MOD_LASERTRIP
+						|| meansOfDeath == MOD_LASERTRIP_ALT
+						|| meansOfDeath == MOD_MELEE
+						|| meansOfDeath == MOD_FORCE_GRIP
+						|| meansOfDeath == MOD_KNOCKOUT
+						|| meansOfDeath == MOD_CRUSH
+						|| meansOfDeath == MOD_IMPACT
+						|| meansOfDeath == MOD_FALLING
+						|| meansOfDeath == MOD_EXPLOSIVE_SPLASH))
+				{//drop it
+					TossClientItems(self);
+					self->client->ps.weapon = self->s.weapon = WP_NONE;
 				}
-				self->client->ps.saberEntityNum = ENTITYNUM_NONE;
+				else
+				{//just free it
+					if (g_entities[self->client->ps.saberEntityNum].inuse)
+					{
+						G_FreeEntity(&g_entities[self->client->ps.saberEntityNum]);
+					}
+					self->client->ps.saberEntityNum = ENTITYNUM_NONE;
+				}
 			}
 		}
 	}
@@ -3934,6 +3970,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 			Drop_Item( self, item, 0, qtrue );
 		}
 	}
+
 	//Use any target we had
 	if ( meansOfDeath != MOD_KNOCKOUT )
 	{
@@ -4911,7 +4948,6 @@ int CheckArmor (gentity_t *ent, int damage, int dflags, int mod)
 	}
 
 
-
 	if ( client->NPC_class == CLASS_GALAKMECH)
 	{//special case
 		if ( client->ps.stats[STAT_ARMOR] <= 0 )
@@ -4930,6 +4966,7 @@ int CheckArmor (gentity_t *ent, int damage, int dflags, int mod)
 			return damage;
 		}
 	}
+
 	else
 	{
 		// armor
@@ -4987,6 +5024,8 @@ void G_Knockdown( gentity_t *self, gentity_t *attacker, const vec3_t pushDir, fl
 	{
 		return;
 	}
+
+	
 
 	if ( Boba_StopKnockdown( self, attacker, pushDir ) )
 	{
@@ -5425,7 +5464,7 @@ qboolean G_ImmuneToGas( gentity_t *ent )
 	{//only effects living clients
 		return qtrue;
 	}
-	if ( ent->s.weapon == WP_NOGHRI_STICK//assumes user is immune
+	if ( (ent->s.weapon == WP_NOGHRI_STICK && !player)//assumes user is immune unless it's the player, changed by Rogue mod
 		|| ent->client->NPC_class == CLASS_HAZARD_TROOPER
 		|| ent->client->NPC_class == CLASS_ATST
 		|| ent->client->NPC_class == CLASS_GONK
@@ -5748,7 +5787,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, const
 		}
 	}
 
-	if ( mod == MOD_DEMP2 || mod == MOD_DEMP2_ALT )
+	if ( mod == MOD_DEMP2 || mod == MOD_DEMP2_ALT || mod == MOD_ELECTROCUTE || mod == MOD_FORCE_LIGHTNING )	//Changed by Rogue mod, let's include more lightning damage types
 	{
 		if ( client )
 		{
@@ -5765,6 +5804,22 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, const
 			{
 				// DEMP2 does way more damage to these guys.
 				damage *= 5;
+			}
+			else if (client->NPC_class == CLASS_ROCKETTROOPER || client->NPC_class == CLASS_BOBAFETT)	//Added by Rogue mod, disables their jetpack temporarily
+			{
+				JET_FlyStop(targ);
+				if (targ->genericBolt1 != -1)
+				{
+					G_PlayEffect(G_EffectIndex("rockettrooper/sparks"), targ->playerModel, targ->genericBolt1, targ->s.number, targ->currentOrigin, 2000, qtrue);
+				}
+				if (targ->genericBolt2 != -1)
+				{
+					G_PlayEffect(G_EffectIndex("rockettrooper/sparks"), targ->playerModel, targ->genericBolt2, targ->s.number, targ->currentOrigin, 2000, qtrue);
+				}
+				if (client->NPC_class == CLASS_ROCKETTROOPER)
+				{
+					targ->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;		//Allows Rockettroopers to fall to their death in bg_pmove.cpp
+				}
 			}
 		}
 		else if ( targ->s.weapon == WP_TURRET )

@@ -63,28 +63,37 @@ typedef enum //# weapon_e
 	//NPC weapons
 	WP_BRYAR_PISTOL,	// NPC weapon - player can pick this up, but never starts with them
 
-	WP_EMPLACED_GUN,
+//	WP_EMPLACED_GUN,	//Moved by Rogue mod						//Moved by Rogue mod
 
-	WP_BOT_LASER,		// Probe droid	- Laser blast
+//	WP_BOT_LASER,		// Probe droid	- Laser blast				//Moved by Rogue mod
 
-	WP_TURRET,			// turret guns
+//	WP_TURRET,			// turret guns								//Moved by Rogue mod
 
-	WP_TIE_FIGHTER,
+//	WP_TIE_FIGHTER,													//Moved by Rogue mod
 
 	WP_RAPID_FIRE_CONC,
 
-	WP_JAWA,
+	WP_JAWA,	//Clone Rifle
 	WP_TUSKEN_RIFLE,
 	WP_TUSKEN_STAFF,
 	WP_SCEPTER,
 	WP_NOGHRI_STICK,
+
+	WP_EMPLACED_GUN,												//Moved by Rogue mod
+
+	WP_BOT_LASER,													//Moved by Rogue mod
+
+	WP_TURRET,														//Moved by Rogue mod
+
+	WP_TIE_FIGHTER,													//Moved by Rogue mod
 
 	//# #eol
 	WP_NUM_WEAPONS
 } weapon_t;
 
 #define FIRST_WEAPON		WP_SABER		// this is the first weapon for next and prev weapon switching
-#define MAX_PLAYER_WEAPONS	WP_STUN_BATON	// this is the max you can switch to and get with the give all. - FIXME: it's actually this one *minus* one... why?
+#define MAX_PLAYER_WEAPONS	WP_NOGHRI_STICK	// this is the max you can switch to and get with the give all. - FIXME: it's actually this one *minus* one... why?
+// Originally WP_STUN_BATON, changed by Rogue Mod
 
 // AMMO_NONE must be first and AMMO_MAX must be last, cause weapon load validates based off of these vals
 typedef enum //# ammo_e
@@ -377,7 +386,7 @@ typedef struct ammoData_s
 
 // Tusken Rifle Shot
 //--------------
-#define TUSKEN_RIFLE_VEL			3000	// fast
+#define TUSKEN_RIFLE_VEL			6000	// fast			//Now very fast! Was 3000, changed by Rogue mod
 #define TUSKEN_RIFLE_DAMAGE_EASY	20		// damaging
 #define TUSKEN_RIFLE_DAMAGE_MEDIUM	30		// very damaging
 #define TUSKEN_RIFLE_DAMAGE_HARD	50		// extremely damaging

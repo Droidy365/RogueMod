@@ -26,13 +26,13 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #include "w_local.h"
 
 //---------------------------------------------------------
-void WP_FireNoghriStick( gentity_t *ent )
+void WP_FireNoghriStick( gentity_t *ent, qboolean alt_fire )
 //---------------------------------------------------------
 {
 	vec3_t	dir, angs;
 
 	vectoangles( forwardVec, angs );
-
+/*
 	if ( !(ent->client->ps.forcePowersActive&(1<<FP_SEE))
 		|| ent->client->ps.forcePowerLevel[FP_SEE] < FORCE_LEVEL_2 )
 	{//force sight 2+ gives perfect aim
@@ -41,7 +41,7 @@ void WP_FireNoghriStick( gentity_t *ent )
 		angs[PITCH] += ( Q_flrand(-1.0f, 1.0f) * (BLASTER_NPC_SPREAD+(6-ent->NPC->currentAim)*0.25f));//was 0.5f
 		angs[YAW]	+= ( Q_flrand(-1.0f, 1.0f) * (BLASTER_NPC_SPREAD+(6-ent->NPC->currentAim)*0.25f));//was 0.5f
 	}
-
+*/
 	AngleVectors( angs, dir, NULL, NULL );
 
 	// FIXME: if temp_org does not have clear trace to inside the bbox, don't shoot!
@@ -51,25 +51,64 @@ void WP_FireNoghriStick( gentity_t *ent )
 
 	WP_MissileTargetHint(ent, muzzle, dir);
 
-	gentity_t *missile = CreateMissile( muzzle, dir, velocity, 10000, ent, qfalse );
+	gentity_t *missile = CreateMissile( muzzle, dir, velocity, 10000, ent, alt_fire );
 
 	missile->classname = "noghri_proj";
 	missile->s.weapon = WP_NOGHRI_STICK;
 
 	// Do the damages
-	if ( ent->s.number != 0 )
+	if (alt_fire)
 	{
-		if ( g_spskill->integer == 0 )
+		if (ent->s.number != 0)
 		{
-			missile->damage = 1;
+			if (ent->client && ent->NPC)
+			{
+				if (g_spskill->integer == 0)
+				{
+					missile->damage = 6;
+				}
+				else if (g_spskill->integer == 1)
+				{
+					missile->damage = 10;
+				}
+				else
+				{
+					missile->damage = 12;	//10
+				}
+			}
+			else
+			{
+				missile->damage = 25;
+			}
 		}
-		else if ( g_spskill->integer == 1 )
+		missile->splashRadius = 200;
+		missile->s.pos.trType = TR_GRAVITY;
+		missile->s.pos.trDelta[2] += 40.0f; //give a slight boost in the upward direction
+	}
+	else
+	{
+		if (ent->s.number != 0)
 		{
-			missile->damage = 5;
-		}
-		else
-		{
-			missile->damage = 10;
+			if (ent->client && ent->NPC)
+			{
+				if (g_spskill->integer == 0)
+				{
+					missile->damage = 1;
+				}
+				else if (g_spskill->integer == 1)
+				{
+					missile->damage = 5;
+				}
+				else
+				{
+					missile->damage = 7;	//10
+				}
+			}
+			else
+			{
+				missile->damage = 15;
+			}
+			missile->splashRadius = 100;
 		}
 	}
 
@@ -87,7 +126,6 @@ void WP_FireNoghriStick( gentity_t *ent )
 	missile->methodOfDeath = MOD_BLASTER;
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
 	missile->splashDamage = 0;
-	missile->splashRadius = 100;
 	missile->splashMethodOfDeath = MOD_GAS;
 
 	//Hmm: maybe spew gas on impact?

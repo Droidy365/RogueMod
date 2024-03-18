@@ -613,7 +613,7 @@ G_InitCvars
 */
 void G_InitCvars( void ) {
 	// don't override the cheat state set by the system
-	g_cheats = gi.cvar ("helpUsObi", "", 0);
+	g_cheats = gi.cvar ("helpUsObi", "", 1);		//Was set to 0, changed for Rogue mod
 	g_developer = gi.cvar ("developer", "", 0);
 
 	// noset vars
@@ -660,7 +660,7 @@ void G_InitCvars( void ) {
 	com_buildScript = gi.cvar ("com_buildscript", "0", 0);
 
 	g_saberAutoBlocking = gi.cvar( "g_saberAutoBlocking", "1", CVAR_CHEAT );//must press +block button to do any blocking
-	g_saberRealisticCombat = gi.cvar( "g_saberMoreRealistic", "0", CVAR_ARCHIVE );//makes collision more precise, increases damage
+	g_saberRealisticCombat = gi.cvar( "g_saberMoreRealistic", "2", CVAR_ARCHIVE );//makes collision more precise, increases damage					//Was set to 0, changed for Rogue mod
 	debug_subdivision = gi.cvar( "debug_subdivision", "0", CVAR_ARCHIVE );//debug for dismemberment
 	g_dismemberProbabilities = gi.cvar ( "g_dismemberProbabilities", "1", CVAR_ARCHIVE );//0 = ignore probabilities, 1 = use probabilities
 	g_saberDamageCapping = gi.cvar( "g_saberDamageCapping", "1", CVAR_CHEAT );//caps damage of sabers vs players and NPC who use sabers
@@ -670,9 +670,9 @@ void G_InitCvars( void ) {
 	g_saberNewControlScheme = gi.cvar( "g_saberNewControlScheme", "0", CVAR_ARCHIVE );//use +forcefocus to pull off all the special moves
 	g_debugSaberLock = gi.cvar( "g_debugSaberLock", "0", CVAR_CHEAT );//just for debugging/development, makes saberlocks happen all the time
 	g_saberLockRandomNess = gi.cvar( "g_saberLockRandomNess", "2", CVAR_ARCHIVE );//just for debugging/development, controls frequency of saberlocks
-	g_debugMelee = gi.cvar( "g_debugMelee", "0", CVAR_CHEAT );//just for debugging/development, test kicks and grabs
+	g_debugMelee = gi.cvar( "g_debugMelee", "1", CVAR_ARCHIVE );//just for debugging/development, test kicks and grabs,								//Was set to 0 and CVAR_CHEAT, changed for Rogue mod
 	g_saberRestrictForce = gi.cvar( "g_saberRestrictForce", "0", CVAR_ARCHIVE );//restricts certain force powers when using a 2-handed saber or 2 sabers
-	g_saberPickuppableDroppedSabers = gi.cvar( "g_saberPickuppableDroppedSabers", "0", CVAR_CHEAT );//lets you pick up sabers that are dropped
+	g_saberPickuppableDroppedSabers = gi.cvar( "g_saberPickuppableDroppedSabers", "1", CVAR_ARCHIVE );//lets you pick up sabers that are dropped,	//Was set to 0 and CVAR_CHEAT, changed for Rogue mod
 
 	g_AIsurrender = gi.cvar( "g_AIsurrender", "0", CVAR_CHEAT );
 	g_numEntities = gi.cvar( "g_numEntities", "0", 0 );
@@ -738,6 +738,7 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	gi.Printf ("gamedate: %s\n", SOURCE_DATE);
 
 	srand( randomSeed );
+	Rand_Init(randomSeed);
 
 	G_InitCvars();
 

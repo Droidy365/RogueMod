@@ -1112,6 +1112,10 @@ void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power );
 void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 
+//Added by Rogue mod, Clone Rifle
+void FX_JawaHitWall(vec3_t origin, vec3_t normal);
+void FX_JawaAltHitWall(vec3_t origin, vec3_t normal, int power);
+
 void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_BlasterWeaponHitWall( vec3_t origin, vec3_t normal );

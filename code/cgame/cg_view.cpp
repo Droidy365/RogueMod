@@ -2141,6 +2141,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	if ( !cg.hyperspace ) {
 		CG_AddPacketEntities(qfalse);			// adter calcViewValues, so predicted player state is correct
 		CG_AddMarks();
+		CG_AddLocalEntities();
 		CG_DrawMiscEnts();
 	}
 
@@ -2208,10 +2209,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView ) {
 	// finish up the rest of the refdef
 	if ( cg.testModelEntity.hModel ) {
 		CG_AddTestModel();
-	}
-
-	if ( !cg.hyperspace ) {
-		CG_AddLocalEntities();
 	}
 
 	memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );

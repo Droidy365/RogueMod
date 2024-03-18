@@ -151,7 +151,7 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 		return;
 	}
 
-	if ( y < -con.charHeight ) {
+	if ( y < -SMALLCHAR_HEIGHT ) {
 		return;
 	}
 
@@ -162,7 +162,7 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 	fcol = col*0.0625;
 	size = 0.0625;
 
-	re.DrawStretchPic( x, y, con.charWidth, con.charHeight,
+	re.DrawStretchPic( x, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT,
 					   fcol, frow,
 					   fcol + size, frow + size,
 					   cls.charSetShader );
@@ -176,7 +176,7 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 	size2 = 0.0625;
 
 	re.DrawStretchPic( x * con.xadjust, y * con.yadjust,
-						con.charWidth * con.xadjust, con.charHeight * con.yadjust,
+						SMALLCHAR_WIDTH * con.xadjust, SMALLCHAR_HEIGHT * con.yadjust,
 		fcol, frow,
 		fcol + size, frow + size2,
 		cls.charSetShader );
@@ -284,7 +284,7 @@ void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, 
 			}
 		}
 		SCR_DrawSmallChar( xx, y, *s );
-		xx += con.charWidth;
+		xx += SMALLCHAR_WIDTH;
 		s++;
 	}
 	re.SetColor( NULL );

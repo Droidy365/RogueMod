@@ -201,7 +201,6 @@ void SV_SpawnServer( const char *server, ForceReload_e eForceReload, qboolean bA
 
 	re.RegisterMedia_LevelLoadBegin( server, eForceReload, bAllowScreenDissolve );
 
-
 	Cvar_SetValue( "cl_paused", 0 );
 	Cvar_Set( "timescale", "1" );//jic we were skipping
 

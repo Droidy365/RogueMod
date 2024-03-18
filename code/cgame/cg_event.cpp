@@ -81,7 +81,6 @@ const char	*CG_PlaceString( int rank ) {
 	return str;
 }
 
-
 /*
 ================
 CG_ItemPickup
@@ -89,22 +88,27 @@ CG_ItemPickup
 A new item was picked up this frame
 ================
 */
-void CG_ItemPickup( int itemNum, qboolean bHadItem ) {
+void CG_ItemPickup( int itemNum, qboolean bHadItem ) {	
 	cg.itemPickup = itemNum;
 	cg.itemPickupTime = cg.time;
 	cg.itemPickupBlendTime = cg.time;
+
+	char* setWeaponTheme = "default";
+
+	char* weaponTheme = NULL;
+
 
 	if (bg_itemlist[itemNum].classname && bg_itemlist[itemNum].classname[0])
 	{
 
 		char text[1024], data[1024];
-		if (cgi_SP_GetStringTextString("SP_INGAME_PICKUPLINE",text, sizeof(text)) )
+		if (cgi_SP_GetStringTextString("SP_INGAME_PICKUPLINE", text, sizeof(text)))
 		{
-			if ( cgi_SP_GetStringTextString( va("SP_INGAME_%s",bg_itemlist[itemNum].classname ), data, sizeof( data )))
+			if (cgi_SP_GetStringTextString(va("SP_INGAME_%s", bg_itemlist[itemNum].classname), data, sizeof(data)))
 			{
-//				Com_Printf("%s %s\n", text, data );
-				cgi_Cvar_Set( "cg_WeaponPickupText", va("%s %s\n", text, data));
-				cg.weaponPickupTextTime	= cg.time + 5000;
+				//				Com_Printf("%s %s\n", text, data );
+				cgi_Cvar_Set("cg_WeaponPickupText", va("%s %s\n", text, data));
+				cg.weaponPickupTextTime = cg.time + 5000;
 			}
 		}
 	}

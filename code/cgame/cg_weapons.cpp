@@ -362,6 +362,18 @@ void CG_RegisterWeapon( int weaponNum ) {
 		cgs.media.purpleSaberGlowShader		= cgi_R_RegisterShader( "gfx/effects/sabers/purple_glow" );
 		cgs.media.purpleSaberCoreShader		= cgi_R_RegisterShader( "gfx/effects/sabers/purple_line" );
 
+
+		// New Rogue mod electrostaff blade colours
+
+		cgs.media.electricBlurShader = cgi_R_RegisterShader("gfx/effects/sabers/electricBlur");
+		cgs.media.redElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/red_lightning");
+		cgs.media.orangeElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/orange_lightning");
+		cgs.media.yellowElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/yellow_lightning");
+		cgs.media.greenElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/green_lightning");
+		cgs.media.blueElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/blue_lightning");
+		cgs.media.purpleElecCoreShader = cgi_R_RegisterShader("gfx/effects/sabers/purple_lightning");
+
+
 		cgs.media.forceCoronaShader			= cgi_R_RegisterShaderNoMip( "gfx/hud/force_swirl" );
 
 		//new Jedi Academy force graphics
@@ -383,7 +395,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_BRYAR_PISTOL:
 	case WP_BLASTER_PISTOL: // enemy version
-	case WP_JAWA:
 		cgs.effects.bryarShotEffect			= theFxScheduler.RegisterEffect( "bryar/shot" );
 											theFxScheduler.RegisterEffect( "bryar/NPCshot" );
 		cgs.effects.bryarPowerupShotEffect	= theFxScheduler.RegisterEffect( "bryar/crackleShot" );
@@ -395,6 +406,17 @@ void CG_RegisterWeapon( int weaponNum ) {
 		// Note....these are temp shared effects
 		theFxScheduler.RegisterEffect( "blaster/deflect" );
 		theFxScheduler.RegisterEffect( "blaster/smoke_bolton" ); // note: this will be called game side
+		break;
+
+	case WP_JAWA:	//Moved by Rogue mod, added new effects
+		cgs.effects.jawaShotEffect = theFxScheduler.RegisterEffect("clone_rifle/shot");
+		theFxScheduler.RegisterEffect("clone_rifle/NPCshot");
+		cgs.effects.jawaPowerupShotEffect = theFxScheduler.RegisterEffect("clone_rifle/crackleShot");
+		cgs.effects.jawaWallImpactEffect = theFxScheduler.RegisterEffect("clone_rifle/wall_impact");
+		cgs.effects.jawaAltWallImpactEffect = theFxScheduler.RegisterEffect("clone_rifle/alt_wall_impact");
+		cgs.effects.jawaFleshImpactEffect = theFxScheduler.RegisterEffect("clone_rifle/flesh_impact");
+		theFxScheduler.RegisterEffect("blaster/deflect");
+		theFxScheduler.RegisterEffect("blaster/smoke_bolton"); // note: this will be called game side
 		break;
 
 	case WP_BLASTER:
@@ -2921,7 +2943,19 @@ void CG_MissileHitWall( centity_t *cent, int weapon, vec3_t origin, vec3_t dir, 
 	{
 	case WP_BRYAR_PISTOL:
 	case WP_BLASTER_PISTOL:
-	case WP_JAWA:
+		if (altFire)
+		{
+			parm = 0;
+
+			if (cent->gent)
+			{
+				parm += cent->gent->count;
+			}
+
+			FX_BryarAltHitWall(origin, dir, parm);
+		}
+		break;
+	case WP_JAWA:	//Added by Rogue mod
 		if ( altFire )
 		{
 			parm = 0;
@@ -2931,11 +2965,11 @@ void CG_MissileHitWall( centity_t *cent, int weapon, vec3_t origin, vec3_t dir, 
 				parm += cent->gent->count;
 			}
 
-			FX_BryarAltHitWall( origin, dir, parm );
+			FX_JawaAltHitWall( origin, dir, parm );
 		}
 		else
 		{
-			FX_BryarHitWall( origin, dir );
+			FX_JawaHitWall( origin, dir );
 		}
 		break;
 

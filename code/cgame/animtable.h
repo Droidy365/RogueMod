@@ -1474,6 +1474,8 @@ stringID_table_t animTable [MAX_ANIMATIONS+1] =
 	ENUM2STRING(BOTH_A6_FB),				//# dual attack front/back
 	ENUM2STRING(BOTH_A6_LR),				//# dual attack left/right
 	ENUM2STRING(BOTH_A7_HILT),			//# saber knock (alt + stand still)
+	ENUM2STRING(BOTH_A7_GRAB),			//# Kyle miss if using staff saber, added by Rogue mod
+	ENUM2STRING(BOTH_A7_MISS),			//# Kyle miss if using staff saber, added by Rogue mod
 	//Alora
 	ENUM2STRING(BOTH_ALORA_SPIN),		//#jump spin attack	death ballet
 	ENUM2STRING(BOTH_ALORA_FLIP_1),		//# gymnast move 1

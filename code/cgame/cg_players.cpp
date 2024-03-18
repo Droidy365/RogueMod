@@ -4566,6 +4566,12 @@ void CG_AddForceSightShell( refEntity_t *ent, centity_t *cent )
 					ent->shaderRGBA[1] = 0;
 					ent->shaderRGBA[2] = 0;
 				}
+				else if (cent->gent->client->NPC_class == CLASS_SHADOWTROOPER)		//Added by Rogue mod, Ghost is purple in Force Sense
+				{
+					ent->shaderRGBA[0] = 255;
+					ent->shaderRGBA[1] = 0;
+					ent->shaderRGBA[2] = 255;
+				}
 			}
 			break;
 		default:
@@ -5626,6 +5632,25 @@ static void CG_RGBForSaberColor( saber_colors_t color, vec3_t rgb )
 		case SABER_PURPLE:
 			VectorSet( rgb, 0.9f, 0.2f, 1.0f );
 			break;
+			//New Rogue mod colours for electrostaff
+//		case ELECTRIC_RED:
+//			VectorSet(rgb, 1.0f, 0.2f, 0.2f);
+//			break;
+//		case ELECTRIC_ORANGE:
+//			VectorSet(rgb, 1.0f, 0.5f, 0.1f);
+//			break;
+		case ELECTRIC_YELLOW:
+			VectorSet(rgb, 1.0f, 1.0f, 0.2f);
+			break;
+//		case ELECTRIC_GREEN:
+//			VectorSet(rgb, 0.2f, 1.0f, 0.2f);
+//			break;
+		case ELECTRIC_BLUE:
+			VectorSet(rgb, 0.2f, 0.4f, 1.0f);
+			break;
+		case ELECTRIC_PURPLE:
+			VectorSet(rgb, 0.9f, 0.2f, 1.0f);
+			break;
 	}
 }
 
@@ -5785,6 +5810,32 @@ static void CG_DoSaber( vec3_t origin, vec3_t dir, float length, float lengthMax
 			glow = cgs.media.purpleSaberGlowShader;
 			blade = cgs.media.purpleSaberCoreShader;
 			break;
+//	New Rogue mod electrostaff colours
+//		case ELECTRIC_RED:
+//			glow = cgs.media.redSaberGlowShader;
+//			blade = cgs.media.redElecCoreShader;
+//			break;
+//		case ELECTRIC_ORANGE:
+//			glow = cgs.media.orangeSaberGlowShader;
+//			blade = cgs.media.orangeElecCoreShader;
+//			break;
+		case ELECTRIC_YELLOW:
+			glow = cgs.media.yellowSaberGlowShader;
+			blade = cgs.media.yellowElecCoreShader;
+			break;
+//		case ELECTRIC_GREEN:
+//			glow = cgs.media.greenSaberGlowShader;
+//			blade = cgs.media.greenElecCoreShader;
+//			break;
+		case ELECTRIC_BLUE:
+			glow = cgs.media.blueSaberGlowShader;
+			blade = cgs.media.blueElecCoreShader;
+			break;
+		case ELECTRIC_PURPLE:
+			glow = cgs.media.purpleSaberGlowShader;
+			blade = cgs.media.purpleElecCoreShader;
+			break;
+
 	}
 
 	// always add a light because sabers cast a nice glow before they slice you in half!!  or something...
@@ -6569,8 +6620,17 @@ Ghoul2 Insert End
 		return;
 	}
 
+	/*
+
 	if ( (!WP_SaberBladeUseSecondBladeStyle( &client->ps.saber[saberNum], bladeNum ) && client->ps.saber[saberNum].trailStyle < 2 )
-		 || ( WP_SaberBladeUseSecondBladeStyle( &client->ps.saber[saberNum], bladeNum ) && client->ps.saber[saberNum].trailStyle2 < 2 ) )
+		 || ( WP_SaberBladeUseSecondBladeStyle( &client->ps.saber[saberNum], bladeNum ) && client->ps.saber[saberNum].trailStyle2 < 2 ) )	//Original trailStyle code
+	*/
+
+
+	//New Rogue mod code to add the electric effect to trailStyle 3, without changing trailStyle 2, allowing modded melee weapons to still work
+	if ((!WP_SaberBladeUseSecondBladeStyle(&client->ps.saber[saberNum], bladeNum) && client->ps.saber[saberNum].trailStyle < 4)
+		|| (WP_SaberBladeUseSecondBladeStyle(&client->ps.saber[saberNum], bladeNum) && (client->ps.saber[saberNum].trailStyle2 < 4
+			|| (client->ps.saber[saberNum].trailStyle != 2 && client->ps.saber[saberNum].trailStyle2 != 2))))
 	{//okay to draw the trail
 		saberTrail_t	*saberTrail = &client->ps.saber[saberNum].blade[bladeNum].trail;
 
@@ -6616,6 +6676,25 @@ Ghoul2 Insert End
 						case SABER_PURPLE:
 							VectorSet( rgb1, 220.0f, 0.0f, 255.0f );
 							break;
+							// New Rogue mod electrostaff colours
+//						case ELECTRIC_RED:
+//							VectorSet( rgb1, 255.0f, 0.0f, 0.0f );
+//							break;
+//						case ELECTRIC_ORANGE:
+//							VectorSet( rgb1, 255.0f, 64.0f, 0.0f );
+//							break;
+						case ELECTRIC_YELLOW:
+							VectorSet( rgb1, 255.0f, 255.0f, 0.0f );
+							break;
+//						case ELECTRIC_GREEN:
+//							VectorSet( rgb1, 0.0f, 255.0f, 0.0f );
+//							break;
+						case ELECTRIC_BLUE:
+							VectorSet( rgb1, 0.0f, 64.0f, 255.0f );
+							break;
+						case ELECTRIC_PURPLE:
+							VectorSet( rgb1, 220.0f, 0.0f, 255.0f );
+							break;
 					}
 				}
 
@@ -6637,6 +6716,12 @@ Ghoul2 Insert End
 						fx->mShader = cgs.media.swordTrailShader;
 						duration = saberTrail->duration/2.0f; // stay around twice as long
 						VectorSet( rgb1, 32.0f, 32.0f, 32.0f ); // make the sith sword trail pretty faint
+					}
+					//else if (cent->gent->client->ps.saber[saberNum].electric > 0 )		//Electric trail effect added by Rogue mod
+					else if (client->ps.saber[saberNum].trailStyle == 3)
+					{
+						fx->mShader = cgs.media.electricBlurShader;
+						duration = saberTrail->duration / 5.0f;
 					}
 					else
 					{

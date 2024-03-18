@@ -175,6 +175,19 @@ typedef struct {
 	qhandle_t	purpleSaberGlowShader;
 	qhandle_t	purpleSaberCoreShader;
 
+	//New Rogue mod electrostaff blade colours
+
+	qhandle_t	redElecCoreShader;
+	qhandle_t	orangeElecCoreShader;
+	qhandle_t	yellowElecCoreShader;
+	qhandle_t	greenElecCoreShader;
+	qhandle_t	blueElecCoreShader;
+	qhandle_t	purpleElecCoreShader;
+
+	qhandle_t	electricBlurShader;
+
+//========================================
+
 	qhandle_t	explosionModel;
 	qhandle_t	surfaceExplosionShader;
 
@@ -321,6 +334,13 @@ typedef struct
 	fxHandle_t	bryarWallImpactEffect2;
 	fxHandle_t	bryarWallImpactEffect3;
 	fxHandle_t	bryarFleshImpactEffect;
+
+	// JAWA GUN (CLONE RIFLE), added by Rogue mod
+	fxHandle_t	jawaShotEffect;
+	fxHandle_t	jawaPowerupShotEffect;
+	fxHandle_t	jawaWallImpactEffect;
+	fxHandle_t	jawaAltWallImpactEffect;
+	fxHandle_t	jawaFleshImpactEffect;
 
 	// BLASTER
 	fxHandle_t	blasterShotEffect;

@@ -1520,7 +1520,8 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 
 //	case WP_BLASTER_PISTOL:
 	case WP_JAWA:
-		WP_FireBryarPistol( ent, qfalse ); // never an alt-fire?
+//		WP_FireBryarPistol( ent, qfalse ); // never an alt-fire?
+		WP_FireBryarPistol(ent, alt_fire);
 		break;
 
 	case WP_SCEPTER:
@@ -1528,11 +1529,7 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 		break;
 
 	case WP_NOGHRI_STICK:
-		if ( !alt_fire )
-		{
-			WP_FireNoghriStick( ent );
-		}
-		//else does melee attack/damage/func
+		WP_FireNoghriStick( ent, alt_fire );
 		break;
 
 	case WP_TUSKEN_STAFF:

@@ -323,7 +323,16 @@ typedef enum
 	SABER_YELLOW,
 	SABER_GREEN,
 	SABER_BLUE,
-	SABER_PURPLE
+	SABER_PURPLE,
+
+	// New Rogue mod electrostaff colours
+
+//	ELECTRIC_RED,
+//	ELECTRIC_ORANGE,
+	ELECTRIC_YELLOW,
+//	ELECTRIC_GREEN,
+	ELECTRIC_BLUE,
+	ELECTRIC_PURPLE,
 
 } saber_colors_t;
 
@@ -1091,6 +1100,12 @@ typedef struct
 	int			splashDamage2;				//0 - amount of splashDamage, 100% at a distance of 0, 0% at a distance = splashRadius
 	float		splashKnockback2;			//0 - amount of splashKnockback, 100% at a distance of 0, 0% at a distance = splashRadius
 //=========================================================================================================================================
+//	New Rogue mod flags for sabers:
+
+	int			electric;	//Added by Rogue mod for electricity effect
+	
+//=========================================================================================================================================
+
 	void		Activate( void )
 				{
 					for ( int i = 0; i < numBlades; i++ )
@@ -1287,6 +1302,8 @@ typedef struct
 		saved_game.write<float>(splashRadius2);
 		saved_game.write<int32_t>(splashDamage2);
 		saved_game.write<float>(splashKnockback2);
+
+		saved_game.write<int>(electric);
 	}
 
 	void sg_import(
@@ -1653,6 +1670,7 @@ public:
 	int			forcePowersActive;	//prediction needs to know this
 
 #endif
+
 
 	//NEW vehicle stuff
 	// This has been localized to the vehicle stuff (NOTE: We can still use it later, I'm just commenting it to
@@ -2758,5 +2776,10 @@ typedef int( *cmpFunc_t )(const void *a, const void *b);
 
 void *Q_LinearSearch( const void *key, const void *ptr, size_t count,
 	size_t size, cmpFunc_t cmp );
+
+struct gentity_s;
+typedef struct gentity_s gentity_t;
+typedef float vec3_t[3];
+
 
 #endif	// __Q_SHARED_H

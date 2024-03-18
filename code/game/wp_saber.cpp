@@ -1644,30 +1644,174 @@ qboolean WP_SaberApplyDamage( gentity_t *ent, float baseDamage, int baseDFlags,
 						{
 							damage = ceil(totalDmg[i]);
 						}
-						G_Damage( victim, inflictor, ent, dmgDir[i], dmgSpot[i], damage, dFlags, MOD_SABER, hitDismemberLoc[i] );
-						if ( damage > 0 && cg.time )
+
+						//This is functional code, I've just replaced it with more adaptable code
+
+						/*	
+						int shockDuration = 250 + (rand() % (1000 - 250 + 1));	//Electric effect code, added by Rogue mod
+						int electricDamage = shockDuration / 100;			//Electric effect code, added by Rogue mod
+
+
+						if (ent->client->ps.saber[saberNum].electric > 0)		//Electric effect code, added by Rogue mod
 						{
-							float sizeTimeScale = 1.0f;
-							if ( (vicWasAlive
-								  && victim->health <= 0 )
-								|| (!vicWasDismembered
-									&& victim->client->dismembered
-									&& hitDismemberLoc[i] != HL_NONE
-									&& hitDismember[i]) )
+							G_Damage(victim, inflictor, ent, dmgDir[i], dmgSpot[i], electricDamage, dFlags, MOD_DEMP2, hitDismemberLoc[i]);
+							victim->s.powerups |= (1 << PW_SHOCKED);
+							if (victim->client) 
 							{
-								sizeTimeScale = 3.0f;
+								// Randomize the duration between 250ms to 1500ms
+								victim->client->ps.powerups[PW_SHOCKED] = level.time + shockDuration;
 							}
-							//FIXME: if not hitting the first model on the enemy, don't do this!
-							CG_SaberDoWeaponHitMarks( ent->client,
-								(ent->client->ps.saberInFlight?&g_entities[ent->client->ps.saberEntityNum]:NULL),
-								victim,
-								saberNum,
-								bladeNum,
-								dmgSpot[i],
-								dmgDir[i],
-								dmgBladeVec[i],
-								dmgNormal[i],
-								sizeTimeScale );
+						}	
+						*/
+						if (!(victim->flags & FL_GODMODE))	//New requirement added by Rogue mod, test for God mode for the sake of my sanity
+						{
+							G_Damage(victim, inflictor, ent, dmgDir[i], dmgSpot[i], damage, dFlags, MOD_SABER, hitDismemberLoc[i]);	//Original saber code
+							//Electric code added for Rogue mod
+							if (ent->client && victim && victim->client && ent->client->ps.saber[saberNum].electric > 0)		//Test if saber has electric tag
+							{
+								qboolean	humanoid = qtrue;
+
+								class_t	npc_class = victim->client->NPC_class;
+
+								if (npc_class == CLASS_SEEKER || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE ||
+									npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
+									npc_class == CLASS_PROTOCOL || npc_class == CLASS_MARK1 || npc_class == CLASS_MARK2 ||
+									npc_class == CLASS_INTERROGATOR || npc_class == CLASS_ATST || npc_class == CLASS_SENTRY
+									|| npc_class == CLASS_ASSASSIN_DROID || npc_class == CLASS_SABER_DROID ||
+
+									npc_class == CLASS_VEHICLE ||
+
+									npc_class == CLASS_HAZARD_TROOPER || npc_class == CLASS_ROCKETTROOPER ||
+
+									npc_class == CLASS_RANCOR || npc_class == CLASS_WAMPA || npc_class == CLASS_HOWLER)
+								{
+									humanoid = qfalse;
+								}
+
+								qboolean	shockResistant = qfalse;
+
+								if (npc_class == CLASS_ATST || npc_class == CLASS_HAZARD_TROOPER ||
+									npc_class == CLASS_RANCOR ||
+
+									npc_class == CLASS_DESANN || npc_class == CLASS_SHADOWTROOPER
+
+									|| !Q_stricmpn(victim->NPC_type, "purge", 5)	//Purge Troopers are shock resistant
+									|| victim->client->playerTeam == inflictor->client->playerTeam)	//Test for friendly fire
+								{
+									shockResistant = qtrue;
+								}
+
+
+								// Base duration and damage modified by the electric property's value
+								int baseShockDuration; // Minimum shock duration
+								int maxShockDuration; // Maximum shock duration
+								int damageScale = ent->client->ps.saber[saberNum].damageScale;
+								meansOfDeath_t electricDamageType;
+
+
+								if (shockResistant)
+								{
+									baseShockDuration = 200;	//1 damage
+									maxShockDuration = 700;		//600, 3 damage
+									electricDamageType = MOD_ELECTROCUTE;
+								}
+								else
+								{
+									baseShockDuration = 400;	//2 damage
+									maxShockDuration = 1100;	//1000, 5 damage
+									electricDamageType = MOD_DEMP2;
+								}
+
+								int shockDurationRange = maxShockDuration - baseShockDuration;
+								int shockDuration = (baseShockDuration + (rand() % shockDurationRange + 1)) * ent->client->ps.saber[saberNum].electric;		//Scale min and max duration with electric tag's level
+								int electricDamage = shockDuration / 200;		//Set electric damage based on duration
+
+								//Force Protect code:
+								if (victim->client->ps.forcePowersActive & (1 << FP_PROTECT))
+								{
+									if (victim->client->ps.forcePowerLevel[FP_PROTECT] == FORCE_LEVEL_1)
+									{
+										damage = damageScale * 0.75;
+										electricDamage *= 0.075;
+									}
+									else if (victim->client->ps.forcePowerLevel[FP_PROTECT] == FORCE_LEVEL_2)
+									{
+										damage = damageScale * 0.5;
+										electricDamage *= 0.05;
+										shockResistant = qtrue;
+									}
+									else if (victim->client->ps.forcePowerLevel[FP_PROTECT] == FORCE_LEVEL_3)
+									{
+										damage = damageScale * 0.25;
+										electricDamage *= 0.025;
+										shockResistant = qtrue;
+									}
+								}
+								//Force Rage code:
+								if (victim->client->ps.forcePowersActive & (1 << FP_RAGE))
+								{
+									if (victim->client->ps.forcePowerLevel[FP_RAGE] == FORCE_LEVEL_1)
+									{
+										damage = damageScale * 0.5;
+										electricDamage *= 0.05;
+									}
+									else if (victim->client->ps.forcePowerLevel[FP_RAGE] == FORCE_LEVEL_2)
+									{
+										damage = damageScale * 0.25;
+										electricDamage *= 0.025;
+									}
+									else if (victim->client->ps.forcePowerLevel[FP_RAGE] == FORCE_LEVEL_3)
+									{
+										damage = damageScale * 0.1;
+										electricDamage *= 0.01;
+									}
+
+									shockResistant = qtrue;
+								}
+
+								// Check if the victim is not already shocked
+								if (ent->client && victim && victim->client && !(victim->client->ps.powerups[PW_SHOCKED] > level.time))
+								{
+									G_Damage(victim, inflictor, ent, NULL, NULL, electricDamage, dFlags, electricDamageType, NULL);
+
+									//Apply shock effect
+									victim->s.powerups |= (1 << PW_SHOCKED); // Apply the shocked powerup
+									victim->client->ps.powerups[PW_SHOCKED] = level.time + shockDuration; // Set the duration for the shock effect
+
+									if (electricDamage > 7) 	//Knock down victim if electric damage is 8 or over, must be humanoid NPC or player. Shock resistance nulls this effect.
+									{
+										if (humanoid && !shockResistant)
+										{
+											G_Knockdown(victim, inflictor, dmgDir[i], shockDuration, qtrue);
+										}
+									}
+								}
+							}
+
+							if (damage > 0 && cg.time)
+							{
+								float sizeTimeScale = 1.0f;
+								if ((vicWasAlive
+									&& victim->health <= 0)
+									|| (!vicWasDismembered
+										&& victim->client->dismembered
+										&& hitDismemberLoc[i] != HL_NONE
+										&& hitDismember[i]))
+								{
+									sizeTimeScale = 3.0f;
+								}
+								//FIXME: if not hitting the first model on the enemy, don't do this!
+								CG_SaberDoWeaponHitMarks(ent->client,
+									(ent->client->ps.saberInFlight ? &g_entities[ent->client->ps.saberEntityNum] : NULL),
+									victim,
+									saberNum,
+									bladeNum,
+									dmgSpot[i],
+									dmgDir[i],
+									dmgBladeVec[i],
+									dmgNormal[i],
+									sizeTimeScale);
+							}
 						}
 #ifndef FINAL_BUILD
 						if ( d_saberCombat->integer )
@@ -10717,6 +10861,11 @@ void ForceGrip( gentity_t *self )
 			return;
 			break;
 		case CLASS_REBORN:
+			if (traceEnt->NPC && !Q_stricmpn(traceEnt->NPC_type, "purge", 5) && traceEnt->client->ps.weaponTime <= 0)	//Added by Rogue mod, purge troopers can't force push
+			{
+				ForceThrow(traceEnt, qfalse);
+				return;
+			}
 		case CLASS_SHADOWTROOPER:
 		case CLASS_ALORA:
 		case CLASS_JEDI:
@@ -11478,6 +11627,12 @@ qboolean ForceDrain2( gentity_t *self )
 			return qtrue;
 			break;
 		case CLASS_REBORN:
+			if (traceEnt->NPC && !Q_stricmpn(traceEnt->NPC_type, "purge", 5) && traceEnt->client->ps.weaponTime <= 0)	//Added by Rogue mod, purge troopers can't force push
+			{
+				ForceDrainGrabStart(self);
+				ForceThrow(traceEnt, qfalse);
+				return qfalse;
+			}
 		case CLASS_SHADOWTROOPER:
 		//case CLASS_ALORA:
 		case CLASS_JEDI:

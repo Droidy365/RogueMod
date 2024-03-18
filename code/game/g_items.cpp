@@ -28,6 +28,9 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #include "../cgame/cg_local.h"
 #include "b_local.h"
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
+
 extern qboolean	missionInfo_Updated;
 
 extern void CrystalAmmoSettings(gentity_t *ent);
@@ -181,6 +184,27 @@ int Add_Ammo2 (gentity_t *ent, int ammoType, int count)
 		{//always cap at twice a full charge
 			ent->client->ps.forcePower = ammoData[ammoType].max*2;
 			return qfalse;		// can't hold any more
+		}
+
+		if (player->client->ps.stats[STAT_MAX_HEALTH] < 100)		//Added for Rogue mod, increases max HP handicap when collecting force crystal
+		{
+			player->client->ps.stats[STAT_MAX_HEALTH] += 5;
+
+			char handicapValue[16]; // Buffer to hold the integer converted to string
+
+			// Convert STAT_MAX_HEALTH to a string and store in handicapValue
+			sprintf(handicapValue, "%d", player->client->ps.stats[STAT_MAX_HEALTH]);
+
+			// Set the handicap cvar to the new string value to avoid breaking it
+			cgi_Cvar_Set("handicap", handicapValue);
+
+
+			// Ensure STAT_MAX_HEALTH does not exceed 100 after the increment
+			if (player->client->ps.stats[STAT_MAX_HEALTH] > 100)
+			{
+				player->client->ps.stats[STAT_MAX_HEALTH] = 100;
+				cgi_Cvar_Set("handicap", "100");
+			}
 		}
 	}
 	return qtrue;
@@ -395,7 +419,7 @@ qboolean Pickup_Saber( gentity_t *self, qboolean hadSaber, gentity_t *pickUpSabe
 				{//but only if already playing the pickup with left hand anim...
 					NPC_SetAnim( self, SETANIM_TORSO, BOTH_SABERPULL, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				}
-				if ( swapSabers )
+				if ( swapSabers && hadSaber )	//hadSaber condition added by Rogue mod, only drop saber if you have one
 				{//drop first one where the one we're picking up is
 					G_DropSaberItem( self->client->ps.saber[saberNum].name, self->client->ps.saber[saberNum].blade[0].color, pickUpSaber->currentOrigin, (float *)vec3_origin, pickUpSaber->currentAngles, pickUpSaber );
 					if ( removeLeftSaber )
@@ -406,12 +430,12 @@ qboolean Pickup_Saber( gentity_t *self, qboolean hadSaber, gentity_t *pickUpSabe
 			}
 			else
 			{
-				if ( swapSabers )
+				if ( swapSabers && hadSaber ) //hadSaber condition added by Rogue mod, only drop saber if you have one
 				{
 					G_DropSaberItem( self->client->ps.saber[saberNum].name, self->client->ps.saber[saberNum].blade[0].color, pickUpSaber->currentOrigin, (float *)vec3_origin, pickUpSaber->currentAngles, pickUpSaber );
 				}
 			}
-			if ( removeLeftSaber )
+			if ( removeLeftSaber && hadSaber ) //hadSaber condition added by Rogue mod, only drop saber if you have one
 			{
 				WP_RemoveSaber( self, 1 );
 			}

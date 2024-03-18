@@ -705,17 +705,17 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 		if ( ent->weaponModel[1] > 0 )
 		{//commando
 			ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
-			ent->NPC->burstMin = 4;
+			ent->NPC->burstMin = 4;		//Originally 4, changed by Rogue mod
 #ifdef BASE_SAVE_COMPAT
-			ent->NPC->burstMean = 8;
+			ent->NPC->burstMean = 6;	//Originally 8
 #endif
-			ent->NPC->burstMax = 12;
+			ent->NPC->burstMax = 8;	//Originally 12
 			if ( g_spskill->integer == 0 )
-				ent->NPC->burstSpacing = 600;//attack debounce
+				ent->NPC->burstSpacing = 900;//attack debounce //Originally 600
 			else if ( g_spskill->integer == 1 )
-				ent->NPC->burstSpacing = 400;//attack debounce
+				ent->NPC->burstSpacing = 600;//attack debounce //Originally 400
 			else
-				ent->NPC->burstSpacing = 250;//attack debounce
+				ent->NPC->burstSpacing = 400;//attack debounce //Originally 250
 		}
 		else if ( ent->client->NPC_class == CLASS_SABOTEUR )
 		{

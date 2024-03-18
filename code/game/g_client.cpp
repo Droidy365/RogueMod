@@ -76,7 +76,7 @@ void SP_info_player_deathmatch(gentity_t *ent) {
 	}
 	else
 	{
-		RegisterItem( FindItemForWeapon( WP_SABER ) );	//these are given in ClientSpawn(), but we register them now before cgame starts
+		RegisterItem( FindItemForWeapon( WP_SABER ) );	//these are given in ClientSpawn(), but we register them now before cgame starts	
 		saberInfo_t	saber;
 		WP_SaberParseParms( g_saber->string, &saber );//get saber sounds and models cached before client begins
 		if (saber.model) G_ModelIndex( saber.model );
@@ -2260,7 +2260,7 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 
 		// give default weapons
 		//these are precached in g_items, ClearRegisteredItems()
-		client->ps.stats[STAT_WEAPONS] = ( 1 << WP_NONE );
+		client->ps.stats[STAT_WEAPONS] = ( 1 << WP_NONE );	
 		//client->ps.inventory[INV_ELECTROBINOCULARS] = 1;
 		//ent->client->ps.inventory[INV_BACTA_CANISTER] = 1;
 
@@ -2270,10 +2270,14 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_STUN_BATON );
 			client->ps.weapon = WP_STUN_BATON;
 		}
-		else
+		else //STARTER WEAPON CODE
 		{	// give the saber because most test maps will not have the STUN BATON flag set
-			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_SABER );	//this is precached in SP_info_player_deathmatch
-			client->ps.weapon = WP_SABER;
+			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BLASTER_PISTOL );	//this is precached in SP_info_player_deathmatch	//Originally WP_SABER, changed for Rogue mod
+			client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);	//Added for Rogue mod
+			client->ps.weapon = WP_BLASTER_PISTOL;	//Originally WP_SABER, changed for Rogue mod
+
+			client->ps.inventory[INV_ELECTROBINOCULARS] = 1;	//Added binoculars for Rogue mod
+			cg.inventorySelect = INV_ELECTROBINOCULARS;
 		}
 		// force the base weapon up
 		client->ps.weaponstate = WEAPON_READY;
@@ -2283,6 +2287,7 @@ qboolean ClientSpawn(gentity_t *ent, SavedGameJustLoaded_e eSavedGameJustLoaded 
 			if ( (client->ps.stats[STAT_WEAPONS]&(1<<i)) )
 			{//if starting with this weapon, gimme max ammo for it
 				client->ps.ammo[weaponData[i].ammoIndex] = ammoData[weaponData[i].ammoIndex].max;
+				client->ps.ammo[WP_SABER] = ammoData[WP_SABER].max;		//Added for Rogue mod to set Saber "Ammo" to max. Cheap and nasty fix, but as the wise philosopher, Todd Howard once said: "It just works".
 			}
 		}
 
